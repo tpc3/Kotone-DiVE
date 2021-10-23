@@ -1,0 +1,21 @@
+debug: true
+discord:
+  token:
+db:
+  kind: bbolt
+  path: bbolt.db
+voices:
+  watson:
+    enabled: true
+    token:
+    api:
+guild:
+  prefix: .
+  maxchar: 100
+  voice:
+    source: watson
+    type: ja-JP_EmiVoice
+  readbots: false
+  policy: arrow
+  policylist: {}
+  replace: {}
