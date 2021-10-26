@@ -1,6 +1,7 @@
 package embed
 
 import (
+	"Kotone-DiVE/lib/config"
 	"log"
 	"time"
 
@@ -25,15 +26,15 @@ func NewEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate) *disc
 	return msg
 }
 
-func NewErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, description string) *discordgo.MessageEmbed {
+func NewErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, lang string, description string) *discordgo.MessageEmbed {
 	msg := NewEmbed(session, orgMsg)
 	msg.Color = ColorPink
-	msg.Title = "Oops"
+	msg.Title = config.Lang[lang].Error.Title
 	msg.Description = description
 	return msg
 }
 
-func NewUnknownErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, err error) *discordgo.MessageEmbed {
+func NewUnknownErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, lang string, err error) *discordgo.MessageEmbed {
 	log.Print("WARN: UnknownError called:", err)
-	return NewErrorEmbed(session, orgMsg, "Unknown error!\nThis will be reported to the admin.")
+	return NewErrorEmbed(session, orgMsg, lang, config.Lang[lang].Error.Unknown)
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 
@@ -10,7 +11,8 @@ import (
 type Config struct {
 	Debug   bool
 	Discord struct {
-		Token string `yaml:"token"`
+		Token  string `yaml:"token"`
+		Status string `yaml:"status"`
 	}
 	Db struct {
 		Kind string `yaml:"kind"`
@@ -18,8 +20,9 @@ type Config struct {
 	}
 	Voices struct {
 		Watson struct {
-			Token string `yaml:"token"`
-			Api   string `yaml:"api"`
+			Enabled bool   `yaml:"enabled"`
+			Token   string `yaml:"token"`
+			Api     string `yaml:"api"`
 		}
 	}
 	Guild Guild
@@ -44,6 +47,7 @@ const configFile = "./config.yaml"
 var CurrentConfig Config
 
 func init() {
+	loadLang()
 	file, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Fatal("Config load failed:", err)
@@ -52,4 +56,32 @@ func init() {
 	if err != nil {
 		log.Fatal("Config parse failed:", err)
 	}
+
+	//verify
+	if CurrentConfig.Discord.Token == "" {
+		log.Fatal("Token is empty")
+	}
+	err = VerifyGuild(&CurrentConfig.Guild)
+	if err != nil {
+		log.Fatal("Config verify failed:", err)
+	}
+}
+
+//You should call voices.Verify before runnning this!
+func VerifyGuild(guild *Guild) error {
+	val, exists := Lang[guild.Lang]
+	if !exists {
+		return errors.New("no such language") //Don't use nil val!
+	}
+	guilderrorstr := val.Error.Guild
+	if len(guild.Prefix) != 1 {
+		return errors.New(guilderrorstr.Prefix)
+	}
+	if guild.MaxChar > 2000 {
+		return errors.New(guilderrorstr.MaxChar)
+	}
+	if guild.Policy != "allow" && guild.Policy != "deny" {
+		return errors.New(guilderrorstr.Policy)
+	}
+	return nil
 }

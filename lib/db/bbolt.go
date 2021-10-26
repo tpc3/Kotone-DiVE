@@ -9,7 +9,10 @@ import (
 
 var db *bbolt.DB
 
-const bucketGuild = "guild"
+const (
+	bucketGuild = "guild"
+	Bbolt       = "bbolt"
+)
 
 func LoadBbolt() error {
 	var err error
@@ -35,12 +38,12 @@ func LoadGuildBbolt(id string) (*config.Guild, error) {
 		if bucket != nil {
 			value := bucket.Get([]byte(id))
 			if value != nil {
-				guild = config.CurrentConfig.Guild
-			} else {
 				err := json.Unmarshal(value, &guild)
 				if err != nil {
 					return err
 				}
+			} else {
+				guild = config.CurrentConfig.Guild
 			}
 		} else {
 			guild = config.CurrentConfig.Guild

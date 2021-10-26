@@ -31,7 +31,7 @@ func main() {
 	}
 
 	log.Print("Kotone-DiVE started successfly!")
-	discord.UpdateGameStatus(0, "Kotone-DiVE is running! | .help")
+	discord.UpdateGameStatus(0, config.CurrentConfig.Discord.Status)
 	defer discord.Close()
 	defer db.Close()
 	stop := make(chan os.Signal)

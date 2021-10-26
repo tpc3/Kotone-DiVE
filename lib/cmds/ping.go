@@ -2,14 +2,17 @@ package cmds
 
 import (
 	"Kotone-DiVE/lib/embed"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-func Ping(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
+const Ping = "ping"
+
+func PingCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
 	msg := embed.NewEmbed(session, orgMsg)
 	msg.Color = embed.ColorBlue
-	msg.Title = "Ping!"
+	msg.Title = strings.Title(Ping)
 	msg.Description = "Pong!"
 	session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 }

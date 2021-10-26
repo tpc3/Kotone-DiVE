@@ -4,14 +4,16 @@ import (
 	"Kotone-DiVE/lib/config"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/patrickmn/go-cache"
 )
 
 var (
 	guildCache      map[string]*config.Guild
 	ConnectionCache map[string]*discordgo.VoiceConnection
-	VoiceCache      map[string]map[string][]byte
+	VoiceCache      *cache.Cache
 	VoiceLock       map[string]*sync.Mutex
 	// userCache map[string]
 )
@@ -20,10 +22,10 @@ func init() {
 	var err error
 	guildCache = map[string]*config.Guild{}
 	ConnectionCache = map[string]*discordgo.VoiceConnection{}
-	VoiceCache = map[string]map[string][]byte{}
+	VoiceCache = cache.New(1*time.Hour, 1*time.Hour)
 	VoiceLock = map[string]*sync.Mutex{}
 	switch config.CurrentConfig.Db.Kind {
-	case "bbolt":
+	case Bbolt:
 		err = LoadBbolt()
 	default:
 		log.Fatal("That kind of db is not impremented:", config.CurrentConfig.Db.Kind)
@@ -36,7 +38,7 @@ func init() {
 func Close() {
 	var err error
 	switch config.CurrentConfig.Db.Kind {
-	case "bbolt":
+	case Bbolt:
 		err = CloseBbolt()
 	}
 	if err != nil {
@@ -53,7 +55,7 @@ func LoadGuild(id string) config.Guild {
 		return *val
 	} else {
 		switch config.CurrentConfig.Db.Kind {
-		case "bbolt":
+		case Bbolt:
 			guild, err = LoadGuildBbolt(id)
 		}
 		if err != nil {
@@ -68,11 +70,13 @@ func LoadGuild(id string) config.Guild {
 func SaveGuild(id string, guild config.Guild) error {
 	var err error
 	switch config.CurrentConfig.Db.Kind {
-	case "bbolt":
+	case Bbolt:
 		err = SaveGuildBbolt(id, guild)
 	}
 	if err != nil {
 		log.Print("WARN: SaveGuild error:", err)
+	} else {
+		delete(guildCache, id)
 	}
 	return err
 }

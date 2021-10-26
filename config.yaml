@@ -1,6 +1,7 @@
 debug: true
 discord:
   token:
+  status: "Kotone-DiVE is running! | .help"
 db:
   kind: bbolt
   path: bbolt.db
@@ -11,8 +12,9 @@ voices:
     api:
 guild:
   prefix: .
+  lang: japanese
   maxchar: 100
-  voice:
+  voice: # Values under this section are not verified before running! Be careful
     source: watson
     type: ja-JP_EmiVoice
   readbots: false

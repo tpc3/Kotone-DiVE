@@ -20,9 +20,11 @@ require (
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/evalphobia/google-tts-go v0.3.0
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 )
