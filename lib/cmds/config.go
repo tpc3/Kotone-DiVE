@@ -18,12 +18,29 @@ const (
 func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild config.Guild) {
 	parsed := strings.SplitN(orgMsg.Content, " ", 3)
 
+	if len(parsed) < 2 {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+		return
+	}
+
 	switch parsed[1] {
 	case "prefix":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		guild.Prefix = parsed[2]
 	case "lang":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		guild.Lang = parsed[2]
 	case "maxchar":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		i, err := strconv.Atoi(parsed[2])
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -32,6 +49,10 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			guild.MaxChar = i
 		}
 	case "voice":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		opt := strings.SplitN(parsed[2], " ", 3)
 		if len(opt) != 2 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -46,6 +67,10 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			guild.Voice.Type = opt[1]
 		}
 	case "readbots":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		i, err := strconv.ParseBool(parsed[2])
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -54,6 +79,10 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			guild.ReadBots = i
 		}
 	case "policy":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
 		guild.Policy = parsed[2]
 	default:
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))

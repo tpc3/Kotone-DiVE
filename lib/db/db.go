@@ -3,6 +3,7 @@ package db
 import (
 	"Kotone-DiVE/lib/config"
 	"log"
+	"regexp"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 var (
 	guildCache      map[string]*config.Guild
 	ConnectionCache map[string]*discordgo.VoiceConnection
+	RegexCache      map[string]*map[*regexp.Regexp]*string
 	VoiceCache      *cache.Cache
 	VoiceLock       map[string]*sync.Mutex
 	// userCache map[string]
@@ -22,7 +24,8 @@ func init() {
 	var err error
 	guildCache = map[string]*config.Guild{}
 	ConnectionCache = map[string]*discordgo.VoiceConnection{}
-	VoiceCache = cache.New(1*time.Hour, 1*time.Hour)
+	RegexCache = map[string]*map[*regexp.Regexp]*string{}
+	VoiceCache = cache.New(24*time.Hour, 1*time.Hour)
 	VoiceLock = map[string]*sync.Mutex{}
 	switch config.CurrentConfig.Db.Kind {
 	case Bbolt:
@@ -77,6 +80,7 @@ func SaveGuild(id string, guild config.Guild) error {
 		log.Print("WARN: SaveGuild error:", err)
 	} else {
 		delete(guildCache, id)
+		delete(RegexCache, id)
 	}
 	return err
 }

@@ -4,14 +4,17 @@ import (
 	"Kotone-DiVE/lib"
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
+	"Kotone-DiVE/lib/voices"
 	"log"
 	"os"
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/common-nighthawk/go-figure"
 )
 
 func init() {
+	figure.NewColorFigure("Kotone-DiVE", "isometric1", "blue", true).Print()
 	log.SetPrefix("[Init]")
 	log.Print("Starting Kotone-DiVE!")
 }
@@ -34,7 +37,8 @@ func main() {
 	discord.UpdateGameStatus(0, config.CurrentConfig.Discord.Status)
 	defer discord.Close()
 	defer db.Close()
-	stop := make(chan os.Signal)
+	defer voices.CleanVoice()
+	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
 	log.Print("Kotone-DiVE is gracefully shutdowning!")

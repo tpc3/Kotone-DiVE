@@ -1,6 +1,7 @@
 package voices
 
 import (
+	"Kotone-DiVE/lib/config"
 	"errors"
 	"io"
 	"log"
@@ -32,6 +33,9 @@ func GttsSynth(content *string, voice *string) (*[]byte, error) {
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		return nil, errors.New("Invalid response from gtts:" + strconv.Itoa(response.StatusCode))
+	}
+	if config.CurrentConfig.Debug {
+		log.Print(response)
 	}
 	bin, err := io.ReadAll(response.Body)
 	if err != nil {

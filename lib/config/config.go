@@ -11,35 +11,44 @@ import (
 type Config struct {
 	Debug   bool
 	Discord struct {
-		Token  string `yaml:"token"`
-		Status string `yaml:"status"`
+		Token  string
+		Status string
 	}
 	Db struct {
-		Kind string `yaml:"kind"`
-		Path string `yaml:"path"`
+		Kind string
+		Path string
 	}
 	Voices struct {
 		Watson struct {
-			Enabled bool   `yaml:"enabled"`
-			Token   string `yaml:"token"`
-			Api     string `yaml:"api"`
+			Enabled bool
+			Token   string
+			Api     string
+		}
+		Gtts struct {
+			Enabled bool
+		}
+		Gcp struct {
+			Enabled bool
+			Token   string
 		}
 	}
 	Guild Guild
 }
 
 type Guild struct {
-	Prefix  string
-	Lang    string
-	MaxChar int
-	Voice   struct {
-		Source string
-		Type   string
-	}
+	Prefix     string
+	Lang       string
+	MaxChar    int
+	Voice      Voice
 	ReadBots   bool
 	Policy     string
 	PolicyList map[string]string `yaml:",flow"`
 	Replace    map[string]string `yaml:",flow"`
+}
+
+type Voice struct {
+	Source string
+	Type   string
 }
 
 const configFile = "./config.yaml"

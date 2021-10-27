@@ -12,6 +12,7 @@ type errorstr struct {
 	Leave   leaveerrorstr
 	Guild   guilderrorstr
 	Config  configerrorstr
+	Replace replaceerrorstr
 }
 
 type guilderrorstr struct {
@@ -34,6 +35,13 @@ type leaveerrorstr struct {
 type configerrorstr struct {
 	SubCmd string
 	Value  string
+}
+
+type replaceerrorstr struct {
+	SubCmd string
+	Syntax string
+	Regex  string
+	Del    string
 }
 
 var (
@@ -65,6 +73,12 @@ func loadLang() {
 				SubCmd: "サブコマンドが不正です。",
 				Value:  "不正な設定値です。",
 			},
+			Replace: replaceerrorstr{
+				SubCmd: "サブコマンドが不正です。",
+				Syntax: "コマンド文法エラーです。",
+				Regex:  "正規表現が間違っています。",
+				Del:    "削除対象が見つかりません。",
+			},
 		},
 	}
 	Lang["english"] = Strings{
@@ -89,6 +103,12 @@ func loadLang() {
 			Config: configerrorstr{
 				SubCmd: "Invalid subcommand.",
 				Value:  "Invalid value.",
+			},
+			Replace: replaceerrorstr{
+				SubCmd: "Invalid subcommand.",
+				Syntax: "Command syntax error.",
+				Regex:  "Invalid regex.",
+				Del:    "So such key in the database",
 			},
 		},
 	}
