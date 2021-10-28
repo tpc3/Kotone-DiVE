@@ -72,7 +72,7 @@ func WatsonVerify(voice *string) error {
 		}
 		if result != nil {
 			for _, v := range result.Voices {
-				if v.Name == voice {
+				if *v.Name == *voice {
 					return nil
 				}
 			}
