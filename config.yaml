@@ -10,6 +10,15 @@ voices:
     enabled: true
     token:
     api:
+  gtts:
+    enabled: true
+  gcp:
+    enabled: false
+    token: 
+  azure:
+    enabled: false
+    key: 
+    region: 
 guild:
   prefix: .
   lang: japanese
