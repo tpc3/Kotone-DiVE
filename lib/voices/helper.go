@@ -16,10 +16,17 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-var Voices []string
+var (
+	Voices      []string
+	configRegex map[*regexp.Regexp]string
+)
 
 func init() {
 	Voices = []string{Watson, Gtts}
+	configRegex = map[*regexp.Regexp]string{}
+	for k, v := range config.CurrentConfig.Replace {
+		configRegex[regexp.MustCompile(k)] = v
+	}
 }
 
 func VerifyVoice(source *string, voice *string, voiceerror string) error {
@@ -39,6 +46,11 @@ func VerifyVoice(source *string, voice *string, voiceerror string) error {
 			return errors.New(voiceerror)
 		}
 		return GcpVerify(voice)
+	case Azure:
+		if !config.CurrentConfig.Voices.Azure.Enabled {
+			return errors.New(voiceerror)
+		}
+		return AzureVerify(voice)
 	default:
 		return errors.New(voiceerror)
 	}
@@ -68,6 +80,11 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 				return nil, errors.New("voice is not available:" + Gcp)
 			}
 			bin, err = GcpSynth(message, &voice.Type)
+		case Azure:
+			if !config.CurrentConfig.Voices.Azure.Enabled {
+				return nil, errors.New("voice is not available:" + Azure)
+			}
+			bin, err = AzureSynth(message, &voice.Type)
 		default:
 			return nil, errors.New("No such voice source:" + voice.Source)
 		}
@@ -124,6 +141,12 @@ func Replace(id *string, list *map[string]string, content string) *string {
 	log.Print(compiled)
 	for k, v := range compiled {
 		content = k.ReplaceAllString(content, *v)
+		if config.CurrentConfig.Debug {
+			log.Print(content)
+		}
+	}
+	for k, v := range configRegex {
+		content = k.ReplaceAllString(content, v)
 		if config.CurrentConfig.Debug {
 			log.Print(content)
 		}

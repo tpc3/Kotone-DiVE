@@ -78,6 +78,18 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		} else {
 			guild.ReadBots = i
 		}
+	case "readname":
+		if len(parsed) != 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))
+			return
+		}
+		i, err := strconv.ParseBool(parsed[2])
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
+			return
+		} else {
+			guild.ReadName = i
+		}
 	case "policy":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.SubCmd))

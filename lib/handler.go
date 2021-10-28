@@ -50,7 +50,21 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 }
 
 func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild *config.Guild) {
-	encoded, err := voices.GetVoice(session, voices.Replace(&orgMsg.GuildID, &guild.Replace, orgMsg.Content), &guild.Voice)
+	if !guild.ReadBots && orgMsg.Author.Bot {
+		return
+	}
+	content := orgMsg.Content
+	if len(content) > guild.MaxChar {
+		content = content[:guild.MaxChar]
+	}
+	if guild.ReadName {
+		if orgMsg.Member.Nick != "" {
+			content = orgMsg.Member.Nick + " " + content
+		} else {
+			content = strings.Split(orgMsg.Member.User.Username, "#")[0] + " " + content
+		}
+	}
+	encoded, err := voices.GetVoice(session, voices.Replace(&orgMsg.GuildID, &guild.Replace, content), &guild.Voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}

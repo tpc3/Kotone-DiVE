@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	Debug   bool
+	Replace map[string]string `yaml:",flow"`
 	Discord struct {
 		Token  string
 		Status string
@@ -31,8 +32,14 @@ type Config struct {
 			Enabled bool
 			Token   string
 		}
+		Azure struct {
+			Enabled bool
+			Key     string
+			Region  string
+		}
 	}
 	Guild Guild
+	User  User
 }
 
 type Guild struct {
@@ -41,11 +48,14 @@ type Guild struct {
 	MaxChar    int
 	Voice      Voice
 	ReadBots   bool
+	ReadName   bool
 	Policy     string
 	PolicyList map[string]string `yaml:",flow"`
 	Replace    map[string]string `yaml:",flow"`
 }
-
+type User struct {
+	Voice Voice
+}
 type Voice struct {
 	Source string
 	Type   string
