@@ -18,6 +18,6 @@ guild:
     source: watson
     type: ja-JP_EmiVoice
   readbots: false
-  policy: arrow
+  policy: allow
   policylist: {}
   replace: {}
