@@ -7,9 +7,31 @@ on:
     branches: [ master ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [linux-386, linux-amd64, darwin-amd64, darwin-arm64, windows-386, windows-amd64]
+        include:
+          - arch: linux-386
+            goos: linux
+            goarch: 386
+          - arch: linux-amd64
+            goos: linux
+            goarch: amd64
+          - arch: darwin-amd64
+            goos: darwin
+            goarch: amd64
+          - arch: darwin-arm64
+            goos: darwin
+            goarch: arm64
+          - arch: windows-386
+            goos: windows
+            goarch: 386
+          - arch: windows-amd64
+            goos: windows
+            goarch: amd64
+        
     steps:
     - uses: actions/checkout@v2
 
@@ -22,6 +44,14 @@ jobs:
       run: mkdir -p bin/linux/amd64
     - name: Build
       run: go build -o bin/linux/amd64/Kotone-DiVE
+
+    - name: Build
+      run: mkdir -p bin/${{ matrix.goos }}/${{ matrix.goarch }}
+    - name: Build
+      run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/Kotone-DiVE
+      env:
+        GOARCH: ${{ matrix.goarch }}
+        GOOS: ${{ matrix.goos }}
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.2.4
