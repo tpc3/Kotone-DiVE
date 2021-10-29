@@ -7,6 +7,7 @@ import (
 	"Kotone-DiVE/lib/embed"
 	"Kotone-DiVE/lib/voices"
 	"io"
+	"log"
 	"strings"
 	"sync"
 
@@ -40,6 +41,12 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 			cmds.ConfigCmd(session, orgMsg, guild)
 		case cmds.Replace:
 			cmds.ReplaceCmd(session, orgMsg, guild)
+		case cmds.Help:
+			cmds.HelpCmd(session, orgMsg, &guild)
+		case cmds.Policy:
+			cmds.PolicyCmd(session, orgMsg, guild)
+		case cmds.User:
+			cmds.UserCmd(session, orgMsg, guild)
 		}
 		return
 	}
@@ -64,7 +71,33 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 			content = strings.Split(orgMsg.Member.User.Username, "#")[0] + " " + content
 		}
 	}
-	encoded, err := voices.GetVoice(session, voices.Replace(&orgMsg.GuildID, &guild.Replace, content), &guild.Voice)
+
+	switch guild.Policy {
+	case "allow":
+		for k := range guild.PolicyList {
+			if k == orgMsg.Author.ID {
+				return
+			}
+		}
+	case "deny":
+		exists := false
+		for k := range guild.PolicyList {
+			if k == orgMsg.Author.ID {
+				exists = true
+			}
+		}
+		if !exists {
+			return
+		}
+	}
+	var voice *config.Voice
+	user, err := db.LoadUser(orgMsg.Author.ID)
+	if err != nil {
+		voice = &guild.Voice
+	} else {
+		voice = &user.Voice
+	}
+	encoded, err := voices.GetVoice(session, voices.Replace(&orgMsg.GuildID, &guild.Replace, content), voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
@@ -82,5 +115,21 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	err = <-done
 	if err != nil && err != io.EOF {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+	}
+}
+
+func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
+	alone := true
+	guild, err := session.State.Guild(state.GuildID)
+	if err != nil {
+		log.Print("WARN: VoiceStateUpdate failed:", err)
+	}
+	for _, userState := range guild.VoiceStates {
+		if state.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
+			alone = false
+		}
+	}
+	if alone {
+		db.ConnectionCache[state.GuildID].Disconnect()
 	}
 }

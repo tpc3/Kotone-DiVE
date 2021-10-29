@@ -26,6 +26,7 @@ func main() {
 		log.Fatal("Discordgo late init failure:", err)
 	}
 	discord.AddHandler(lib.MessageCreate)
+	discord.AddHandler(lib.VoiceStateUpdate)
 	discord.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates
 	err = discord.Open()
 	if err != nil {

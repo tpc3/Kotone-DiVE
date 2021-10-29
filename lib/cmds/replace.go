@@ -17,7 +17,7 @@ const Replace = "replace"
 func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild config.Guild) {
 	parsed := strings.SplitN(orgMsg.Content, " ", 3)
 	if len(parsed) < 2 {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.SubCmd))
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
 	}
 	switch parsed[1] {
@@ -58,12 +58,6 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		delete(guild.Replace, keys[val])
 
 	case "list":
-		// Page splitting
-		// page, err := strconv.Atoi(parsed[2])
-		// if err != nil || len(guild.Replace)/10+1 < page {
-		// 	session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
-		// 	return
-		// }
 		var keys []string
 		for k := range guild.Replace {
 			keys = append(keys, k)
@@ -84,7 +78,7 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return // readonly
 
 	default:
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.SubCmd))
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
 	}
 	err := db.SaveGuild(orgMsg.GuildID, guild)

@@ -2,6 +2,7 @@ package db
 
 import (
 	"Kotone-DiVE/lib/config"
+	"errors"
 	"log"
 	"regexp"
 	"sync"
@@ -17,12 +18,13 @@ var (
 	RegexCache      map[string]*map[*regexp.Regexp]*string
 	VoiceCache      *cache.Cache
 	VoiceLock       map[string]*sync.Mutex
-	// userCache map[string]
+	userCache       map[string]*config.User
 )
 
 func init() {
 	var err error
 	guildCache = map[string]*config.Guild{}
+	userCache = map[string]*config.User{}
 	ConnectionCache = map[string]*discordgo.VoiceConnection{}
 	RegexCache = map[string]*map[*regexp.Regexp]*string{}
 	VoiceCache = cache.New(24*time.Hour, 1*time.Hour)
@@ -48,6 +50,7 @@ func Close() {
 		log.Fatal("DB close error:", err)
 	}
 }
+
 func LoadGuild(id string) config.Guild {
 	var (
 		err   error
@@ -81,6 +84,56 @@ func SaveGuild(id string, guild config.Guild) error {
 	} else {
 		delete(guildCache, id)
 		delete(RegexCache, id)
+	}
+	return err
+}
+
+func LoadUser(id string) (config.User, error) {
+	var (
+		err  error
+		user *config.User
+	)
+	val, exists := userCache[id]
+	if exists {
+		return *val, nil
+	} else {
+		switch config.CurrentConfig.Db.Kind {
+		case Bbolt:
+			user, err = LoadUserBbolt(id)
+		}
+		if err != nil {
+			log.Print("WARN: UserConfig is not available:", err)
+			return config.User{}, err
+		} else if user == nil {
+			return config.User{}, errors.New("user does not exists")
+		}
+		userCache[id] = user
+		return *user, nil
+	}
+}
+
+func SaveUser(id string, user config.User) error {
+	var err error
+	switch config.CurrentConfig.Db.Kind {
+	case Bbolt:
+		err = SaveUserBbolt(id, user)
+	}
+	if err != nil {
+		log.Print("WARN: SaveUser error:", err.Error())
+	} else {
+		delete(userCache, id)
+	}
+	return err
+}
+
+func DeleteUser(id string) error {
+	var err error
+	switch config.CurrentConfig.Db.Kind {
+	case Bbolt:
+		err = DeleteUserBbolt(id)
+	}
+	if err != nil {
+		log.Print("WARN: DeleteUser error:", err)
 	}
 	return err
 }

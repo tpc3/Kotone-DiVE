@@ -79,7 +79,7 @@ func init() {
 func AzureSynth(content *string, voice *string) (*[]byte, error) {
 	val, exists := azureVoices[*voice]
 	if !exists {
-		return nil, errors.New("Invalid voice type")
+		return nil, errors.New("invalid voice type")
 	}
 	buffer := bytes.Buffer{}
 	err := xml.EscapeText(&buffer, []byte(*content))

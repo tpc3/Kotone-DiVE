@@ -2,23 +2,26 @@ package config
 
 type Strings struct {
 	Lang  string
+	Help  string
 	Error errorstr
 }
 
 type errorstr struct {
 	Title   string
 	Unknown string
+	SubCmd  string
+	Voice   string
 	Join    joinerrorstr
 	Leave   leaveerrorstr
 	Guild   guilderrorstr
 	Config  configerrorstr
 	Replace replaceerrorstr
+	Policy  policyerrorstr
 }
 
 type guilderrorstr struct {
 	Prefix  string
 	MaxChar string
-	Voice   string
 	Policy  string
 }
 
@@ -33,15 +36,18 @@ type leaveerrorstr struct {
 }
 
 type configerrorstr struct {
-	SubCmd string
-	Value  string
+	Value string
 }
 
 type replaceerrorstr struct {
-	SubCmd string
 	Syntax string
 	Regex  string
 	Del    string
+}
+
+type policyerrorstr struct {
+	Exists    string
+	NotExists string
 }
 
 var (
@@ -52,9 +58,12 @@ func loadLang() {
 	Lang = map[string]Strings{}
 	Lang["japanese"] = Strings{
 		Lang: "japanese",
+		Help: "Botの使い方に関しては、Wikiをご覧ください。",
 		Error: errorstr{
 			Title:   "エラー",
 			Unknown: "不明なエラーが発生しました。\nこの問題は管理者に報告されます。",
+			SubCmd:  "サブコマンドが不正です。",
+			Voice:   "そのようなボイスは存在しません。",
 			Join: joinerrorstr{
 				Already:   "既にVCに接続済です。",
 				Joinfirst: "まずはVCに参加してください。",
@@ -66,26 +75,30 @@ func loadLang() {
 			Guild: guilderrorstr{
 				Prefix:  "プレフィクスは1文字である必要があります。",
 				MaxChar: "最大文字数は0文字以上2000文字以下である必要があります。",
-				Voice:   "そのようなボイスは存在しません。",
 				Policy:  "ポリシーはallowかdenyである必要があります。",
 			},
 			Config: configerrorstr{
-				SubCmd: "サブコマンドが不正です。",
-				Value:  "不正な設定値です。",
+				Value: "不正な設定値です。",
 			},
 			Replace: replaceerrorstr{
-				SubCmd: "サブコマンドが不正です。",
-				Syntax: "コマンド文法エラーです。",
-				Regex:  "正規表現が間違っています。",
-				Del:    "削除対象が見つかりません。",
+				Regex: "正規表現が間違っています。",
+				Del:   "削除対象が見つかりません。",
+			},
+			Policy: policyerrorstr{
+				Exists:    "ポリシーが既に存在しています。",
+				NotExists: "ポリシーが存在しません。",
 			},
 		},
 	}
 	Lang["english"] = Strings{
 		Lang: "english",
+
+		Help: "Usage is available on the Wiki.",
 		Error: errorstr{
 			Title:   "Error",
 			Unknown: "Unknown Error!\nThis will be reported.",
+			SubCmd:  "Invalid subcommand.",
+			Voice:   "No such voice.",
 			Join: joinerrorstr{
 				Already:   "I've already joined.",
 				Joinfirst: "You must join VC first",
@@ -97,18 +110,19 @@ func loadLang() {
 			Guild: guilderrorstr{
 				Prefix:  "Prefix must be a single char.",
 				MaxChar: "Max char must be between 0 and 2000.",
-				Voice:   "No such voice.",
 				Policy:  "Policy should be allow or deny.",
 			},
 			Config: configerrorstr{
-				SubCmd: "Invalid subcommand.",
-				Value:  "Invalid value.",
+				Value: "Invalid value.",
 			},
 			Replace: replaceerrorstr{
-				SubCmd: "Invalid subcommand.",
 				Syntax: "Command syntax error.",
 				Regex:  "Invalid regex.",
 				Del:    "So such key in the database",
+			},
+			Policy: policyerrorstr{
+				Exists:    "Policy already exists.",
+				NotExists: "Policy doesn't exists.",
 			},
 		},
 	}

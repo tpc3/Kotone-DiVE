@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Debug   bool
 	Replace map[string]string `yaml:",flow"`
+	Help    string
 	Discord struct {
 		Token  string
 		Status string
@@ -50,7 +51,7 @@ type Guild struct {
 	ReadBots   bool
 	ReadName   bool
 	Policy     string
-	PolicyList map[string]string `yaml:",flow"`
+	PolicyList map[string]string
 	Replace    map[string]string `yaml:",flow"`
 }
 type User struct {
