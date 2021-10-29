@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [linux-386, linux-amd64, darwin-amd64, darwin-arm64, windows-386, windows-amd64]
+        arch: [linux-386, linux-amd64, linux-arm, linux-arm64, darwin-amd64, darwin-arm64, windows-386, windows-amd64]
         include:
           - arch: linux-386
             goos: linux
@@ -19,6 +19,12 @@ jobs:
           - arch: linux-amd64
             goos: linux
             goarch: amd64
+          - arch: linux-arm
+            goos: linux
+            goarch: arm
+          - arch: linux-arm64
+            goos: linux
+            goarch: arm64
           - arch: darwin-amd64
             goos: darwin
             goarch: amd64
@@ -45,6 +51,7 @@ jobs:
     - name: Build
       run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/Kotone-DiVE
       env:
+        CGO_ENABLED: 0
         GOARCH: ${{ matrix.goarch }}
         GOOS: ${{ matrix.goos }}
 
