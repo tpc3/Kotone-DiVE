@@ -10,6 +10,7 @@ import (
 	"log"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
@@ -124,32 +125,77 @@ func CleanVoice() {
 	GcpClose()
 }
 
-func Replace(id *string, list *map[string]string, content string) *string {
+func Replace(id *string, list *map[string]string, content string, trace bool) (*string, *string) {
+	var (
+		logStr string
+		start  time.Time
+		oldStr string
+	) // debug
+	if trace {
+		start = time.Now()
+		logStr = "Regex Replace() trace started at " + start.String() + " with string \"" + content + "\".\nGuildId is: " + *id + ".\n"
+	}
 	val, exists := db.RegexCache[*id]
 	compiled := map[*regexp.Regexp]*string{}
 	if exists {
 		compiled = *val
+		if trace {
+			logStr += "Guild regex cache found.\nGot cache in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
+		}
 	} else {
+		if trace {
+			logStr += "Guild regex cache not found.\nCompiling regex...\n\n"
+		}
 		for k, v := range *list {
+			if trace {
+				logStr += "Compiling \"" + k + "\" ...\n"
+			}
 			regex, err := regexp.Compile(k)
 			if err == nil {
-				compiled[regex] = &v
+				text := v //Let's encrypt knows everything
+				compiled[regex] = &text
+			} else {
+				if trace {
+					logStr += "|-Error occured while compiling.\n" + err.Error() + ".\n|-Skipping...\n"
+				}
 			}
 		}
 		db.RegexCache[*id] = &compiled
+		if trace {
+			logStr += "Compiled regex in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n\n"
+		}
 	}
-	log.Print(compiled)
+	if trace {
+		logStr += "Starting process of " + strconv.Itoa(len(compiled)) + " user regex(s).\n\nRegex(s):\n"
+		for k, v := range compiled {
+			logStr += "|- \"" + k.String() + "\" => \"" + *v + "\"\n"
+		}
+		logStr += "\n"
+	}
 	for k, v := range compiled {
+		if trace {
+			oldStr = content
+		}
 		content = k.ReplaceAllString(content, *v)
-		if config.CurrentConfig.Debug {
-			log.Print(content)
+		if trace && content != oldStr {
+			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + *v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: \"" + content + "\"\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
 		}
 	}
+	if trace {
+		logStr += "Processed user regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
+	}
+
 	for k, v := range configRegex {
+		if trace {
+			oldStr = content
+		}
 		content = k.ReplaceAllString(content, v)
-		if config.CurrentConfig.Debug {
-			log.Print(content)
+		if trace && content != oldStr {
+			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: " + content + "\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
 		}
 	}
-	return &content
+	if trace {
+		logStr += "Processed config regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\nReplace() ended at " + time.Now().String() + " with string \"" + content + "\".\n"
+	}
+	return &content, &logStr
 }

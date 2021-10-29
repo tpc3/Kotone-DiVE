@@ -10,6 +10,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
@@ -20,6 +21,10 @@ func init() {
 }
 
 func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
+	var start time.Time
+	if config.CurrentConfig.Debug {
+		start = time.Now()
+	}
 	guild := db.LoadGuild(orgMsg.GuildID)
 
 	// Ignore all messages created by the bot itself
@@ -47,12 +52,20 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 			cmds.PolicyCmd(session, orgMsg, guild)
 		case cmds.User:
 			cmds.UserCmd(session, orgMsg, guild)
+		case cmds.Debug:
+			cmds.DebugCmd(session, orgMsg, &guild)
+		}
+		if config.CurrentConfig.Debug {
+			log.Print("Processed in ", time.Since(start).Milliseconds(), "ms.")
 		}
 		return
 	}
 	_, exists := db.ConnectionCache[orgMsg.GuildID]
 	if exists {
 		ttsHandler(session, orgMsg, &guild)
+	}
+	if config.CurrentConfig.Debug {
+		log.Print("Processed in ", time.Since(start).Nanoseconds(), "ns.")
 	}
 }
 
@@ -97,7 +110,8 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	} else {
 		voice = &user.Voice
 	}
-	encoded, err := voices.GetVoice(session, voices.Replace(&orgMsg.GuildID, &guild.Replace, content), voice)
+	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
+	encoded, err := voices.GetVoice(session, replaced, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}

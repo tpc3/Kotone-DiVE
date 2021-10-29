@@ -14,6 +14,12 @@ const (
 	ColorPink = 0xf50057
 )
 
+var UnknownErrorNum int
+
+func init() {
+	UnknownErrorNum = 0
+}
+
 func NewEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate) *discordgo.MessageEmbed {
 	now := time.Now()
 	msg := &discordgo.MessageEmbed{}
@@ -36,5 +42,6 @@ func NewErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, 
 
 func NewUnknownErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, lang string, err error) *discordgo.MessageEmbed {
 	log.Print("WARN: UnknownError called:", err)
+	UnknownErrorNum++
 	return NewErrorEmbed(session, orgMsg, lang, config.Lang[lang].Error.Unknown)
 }
