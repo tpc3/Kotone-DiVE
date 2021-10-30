@@ -133,8 +133,8 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
-	selfState, err := session.State.VoiceState(state.GuildID, session.State.User.ID)
-	if err != nil {
+	selfState, exists := db.ConnectionCache[state.GuildID]
+	if !exists {
 		return // Bot isn't connected
 	}
 	alone := true
