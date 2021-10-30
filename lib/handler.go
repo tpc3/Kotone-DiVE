@@ -74,8 +74,9 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 	content := orgMsg.Content
-	if len(content) > guild.MaxChar {
-		content = content[:guild.MaxChar]
+	runeContent := []rune(orgMsg.Content)
+	if len(runeContent) > guild.MaxChar {
+		content = string(runeContent[:guild.MaxChar])
 	}
 	if guild.ReadName {
 		if orgMsg.Member.Nick != "" {
