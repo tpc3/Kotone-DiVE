@@ -133,17 +133,25 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
+	selfState, exists := db.ConnectionCache[state.GuildID]
+	if !exists {
+		return // Bot isn't connected
+	}
 	alone := true
 	guild, err := session.State.Guild(state.GuildID)
 	if err != nil {
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
 	for _, userState := range guild.VoiceStates {
-		if state.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
+		if selfState.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
 			alone = false
 		}
 	}
 	if alone {
-		db.ConnectionCache[state.GuildID].Disconnect()
+		err := db.ConnectionCache[state.GuildID].Disconnect()
+		delete(db.ConnectionCache, state.GuildID)
+		if err != nil {
+			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
+		}
 	}
 }
