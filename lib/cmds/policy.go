@@ -4,6 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -41,6 +42,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		for k := range guild.PolicyList {
 			keys = append(keys, k)
 		}
+		sort.Strings(keys)
 		text := ""
 		for i, v := range keys {
 			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.Replace[v] + "\"\n"

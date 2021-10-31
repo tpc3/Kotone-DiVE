@@ -5,6 +5,7 @@ import (
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -62,6 +63,7 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		for k := range guild.Replace {
 			keys = append(keys, k)
 		}
+		sort.Strings(keys)
 		text := ""
 		for i, v := range keys {
 			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.Replace[v] + "\"\n"
