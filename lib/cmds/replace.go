@@ -48,7 +48,7 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		}
 	case "delnum":
 		val, err := strconv.Atoi(parsed[2])
-		if err != nil || len(guild.Replace) < val || val < 0 {
+		if err != nil || len(guild.Replace) <= val || val < 0 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
 			return
 		}
