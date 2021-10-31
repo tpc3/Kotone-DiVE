@@ -56,6 +56,7 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		for k := range guild.Replace {
 			keys = append(keys, k)
 		}
+		sort.Strings(keys)
 		delete(guild.Replace, keys[val])
 
 	case "list":
