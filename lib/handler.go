@@ -25,7 +25,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 	if config.CurrentConfig.Debug {
 		start = time.Now()
 	}
-	guild := db.LoadGuild(orgMsg.GuildID)
+	guild := db.LoadGuild(&orgMsg.GuildID)
 
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
@@ -73,7 +73,11 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	if !guild.ReadBots && orgMsg.Author.Bot {
 		return
 	}
-	content := orgMsg.Content
+	content, err := orgMsg.ContentWithMoreMentionsReplaced(session)
+	if err != nil {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
+	}
 	runeContent := []rune(orgMsg.Content)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])
@@ -105,7 +109,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		}
 	}
 	var voice *config.Voice
-	user, err := db.LoadUser(orgMsg.Author.ID)
+	user, err := db.LoadUser(&orgMsg.Author.ID)
 	if err != nil {
 		voice = &guild.Voice
 	} else {

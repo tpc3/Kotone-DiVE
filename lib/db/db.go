@@ -51,12 +51,12 @@ func Close() {
 	}
 }
 
-func LoadGuild(id string) config.Guild {
+func LoadGuild(id *string) config.Guild {
 	var (
 		err   error
 		guild *config.Guild
 	)
-	val, exists := guildCache[id]
+	val, exists := guildCache[*id]
 	if exists {
 		return *val
 	} else {
@@ -68,12 +68,12 @@ func LoadGuild(id string) config.Guild {
 			log.Print("WARN: LoadGuild error, using default:", err)
 			return config.CurrentConfig.Guild
 		}
-		guildCache[id] = guild
+		guildCache[*id] = guild
 		return *guild
 	}
 }
 
-func SaveGuild(id string, guild config.Guild) error {
+func SaveGuild(id *string, guild *config.Guild) error {
 	var err error
 	switch config.CurrentConfig.Db.Kind {
 	case Bbolt:
@@ -82,18 +82,18 @@ func SaveGuild(id string, guild config.Guild) error {
 	if err != nil {
 		log.Print("WARN: SaveGuild error:", err)
 	} else {
-		delete(guildCache, id)
-		delete(RegexCache, id)
+		delete(guildCache, *id)
+		delete(RegexCache, *id)
 	}
 	return err
 }
 
-func LoadUser(id string) (config.User, error) {
+func LoadUser(id *string) (config.User, error) {
 	var (
 		err  error
 		user *config.User
 	)
-	val, exists := userCache[id]
+	val, exists := userCache[*id]
 	if exists {
 		return *val, nil
 	} else {
@@ -107,12 +107,12 @@ func LoadUser(id string) (config.User, error) {
 		} else if user == nil {
 			return config.User{}, errors.New("user does not exists")
 		}
-		userCache[id] = user
+		userCache[*id] = user
 		return *user, nil
 	}
 }
 
-func SaveUser(id string, user config.User) error {
+func SaveUser(id *string, user *config.User) error {
 	var err error
 	switch config.CurrentConfig.Db.Kind {
 	case Bbolt:
@@ -121,12 +121,12 @@ func SaveUser(id string, user config.User) error {
 	if err != nil {
 		log.Print("WARN: SaveUser error:", err.Error())
 	} else {
-		delete(userCache, id)
+		delete(userCache, *id)
 	}
 	return err
 }
 
-func DeleteUser(id string) error {
+func DeleteUser(id *string) error {
 	var err error
 	switch config.CurrentConfig.Db.Kind {
 	case Bbolt:

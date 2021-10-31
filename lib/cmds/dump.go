@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"Kotone-DiVE/lib/config"
+	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
 	"bytes"
 	"strings"
@@ -16,17 +17,32 @@ const (
 )
 
 func DumpCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild *config.Guild) {
-	result, err := yaml.Marshal(guild)
+	req := strings.SplitN(orgMsg.Content, " ", 2)
+	var (
+		str string
+		obj interface{}
+	)
+	if len(req) == 1 || req[1] != "user" {
+		obj = guild
+	} else {
+		var err error
+		obj, err = db.LoadUser(&orgMsg.Author.ID)
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
+			return
+		}
+	}
+	result, err := yaml.Marshal(obj)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
-	str := "```" + ext + "\n" + string(result) + "```"
-
+	str = "```" + ext + "\n" + string(result) + "```"
 	if len(str) > 2048 {
 		session.ChannelFileSend(orgMsg.ChannelID, Dump+"."+ext, bytes.NewReader(result))
+	} else {
+		msg := embed.NewEmbed(session, orgMsg)
+		msg.Title = strings.Title(Dump)
+		msg.Description = str
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 	}
-	msg := embed.NewEmbed(session, orgMsg)
-	msg.Title = strings.Title(Dump)
-	msg.Description = str
-	session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 }

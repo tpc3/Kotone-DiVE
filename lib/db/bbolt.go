@@ -32,12 +32,12 @@ func CloseBbolt() error {
 	return nil
 }
 
-func LoadGuildBbolt(id string) (*config.Guild, error) {
+func LoadGuildBbolt(id *string) (*config.Guild, error) {
 	guild := config.Guild{}
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketGuild))
 		if bucket != nil {
-			value := bucket.Get([]byte(id))
+			value := bucket.Get([]byte(*id))
 			if value != nil {
 				err := json.Unmarshal(value, &guild)
 				if err != nil {
@@ -57,7 +57,7 @@ func LoadGuildBbolt(id string) (*config.Guild, error) {
 	return &guild, nil
 }
 
-func SaveGuildBbolt(id string, guild config.Guild) error {
+func SaveGuildBbolt(id *string, guild *config.Guild) error {
 	jsonGuild, err := json.Marshal(guild)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func SaveGuildBbolt(id string, guild config.Guild) error {
 		if err != nil {
 			return err
 		}
-		bucket.Put([]byte(id), jsonGuild)
+		bucket.Put([]byte(*id), jsonGuild)
 		return nil
 	})
 	if err != nil {
@@ -76,13 +76,13 @@ func SaveGuildBbolt(id string, guild config.Guild) error {
 	return nil
 }
 
-func LoadUserBbolt(id string) (*config.User, error) {
+func LoadUserBbolt(id *string) (*config.User, error) {
 	exists := true
 	user := config.User{}
 	err := db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketUser))
 		if bucket != nil {
-			value := bucket.Get([]byte(id))
+			value := bucket.Get([]byte(*id))
 			if value != nil {
 				err := json.Unmarshal(value, &user)
 				if err != nil {
@@ -106,7 +106,7 @@ func LoadUserBbolt(id string) (*config.User, error) {
 	}
 }
 
-func SaveUserBbolt(id string, user config.User) error {
+func SaveUserBbolt(id *string, user *config.User) error {
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func SaveUserBbolt(id string, user config.User) error {
 		if err != nil {
 			return err
 		}
-		bucket.Put([]byte(id), jsonUser)
+		bucket.Put([]byte(*id), jsonUser)
 		return nil
 	})
 	if err != nil {
@@ -125,13 +125,13 @@ func SaveUserBbolt(id string, user config.User) error {
 	return nil
 }
 
-func DeleteUserBbolt(id string) error {
+func DeleteUserBbolt(id *string) error {
 	err := db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(bucketUser))
 		if err != nil {
 			return err
 		}
-		return bucket.Delete([]byte(id))
+		return bucket.Delete([]byte(*id))
 	})
 	if err != nil {
 		return err

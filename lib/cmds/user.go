@@ -14,7 +14,7 @@ const User = "user"
 
 func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild config.Guild) {
 	parsed := strings.SplitN(orgMsg.Content, " ", 3)
-	user, err := db.LoadUser(orgMsg.Author.ID)
+	user, err := db.LoadUser(&orgMsg.Author.ID)
 	if err != nil {
 		user = config.User{}
 	}
@@ -34,7 +34,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 			user.Voice.Type = options[1]
 		}
 	case "delete":
-		err := db.DeleteUser(orgMsg.Author.ID)
+		err := db.DeleteUser(&orgMsg.Author.ID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		}
@@ -42,7 +42,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 	default:
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 	}
-	err = db.SaveUser(orgMsg.Author.ID, user)
+	err = db.SaveUser(&orgMsg.Author.ID, &user)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
