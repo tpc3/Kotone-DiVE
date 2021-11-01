@@ -46,6 +46,8 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		}
+		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
+		return
 	default:
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
