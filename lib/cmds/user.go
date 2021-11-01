@@ -24,7 +24,15 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 	}
 	switch parsed[1] {
 	case "voice":
+		if len(parsed) < 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
+			return
+		}
 		options := strings.SplitN(parsed[2], " ", 2)
+		if len(options) != 2 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
+			return
+		}
 		err := voices.VerifyVoice(&options[0], &options[1], config.Lang[guild.Lang].Error.Voice)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+err.Error()))
