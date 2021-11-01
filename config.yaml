@@ -1,4 +1,6 @@
 debug: true
+replace: {}
+help: https://github.com/tpc3/Kotone-DiVE/wiki
 discord:
   token:
   status: "Kotone-DiVE is running! | .help"
@@ -27,6 +29,7 @@ guild:
     source: watson
     type: ja-JP_EmiVoice
   readbots: false
+  readname: true
   policy: allow
-  policylist: {}
+  policylist:
   replace: {}
