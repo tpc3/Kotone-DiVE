@@ -104,7 +104,7 @@ func AzureSynth(content *string, voice *string) (*[]byte, error) {
 func AzureVerify(voice *string) error {
 	_, exists := azureVoices[*voice]
 	if !exists {
-		return errors.New("invalid voice type")
+		return errors.New("invalid voice type: " + *voice)
 	}
 	return nil
 }

@@ -62,7 +62,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 	}
 	_, exists := db.ConnectionCache[orgMsg.GuildID]
 	if exists {
-		if db.ChannelCache[orgMsg.GuildID] == &orgMsg.ChannelID {
+		if *db.ChannelCache[orgMsg.GuildID] == orgMsg.ChannelID {
 			ttsHandler(session, orgMsg, &guild)
 		}
 	}

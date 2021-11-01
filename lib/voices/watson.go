@@ -2,6 +2,8 @@ package voices
 
 import (
 	"Kotone-DiVE/lib/config"
+	"bytes"
+	"encoding/xml"
 	"errors"
 	"io"
 	"log"
@@ -32,8 +34,14 @@ func init() {
 }
 
 func WatsonSynth(content *string, voice *string) (*[]byte, error) {
+	var buf bytes.Buffer
+	err := xml.EscapeText(&buf, []byte(*voice))
+	if err != nil {
+		return nil, err
+	}
+	str := buf.String()
 	result, response, err := tts.Synthesize(&texttospeechv1.SynthesizeOptions{
-		Text:   content,
+		Text:   &str,
 		Accept: core.StringPtr("audio/ogg;codecs=opus"),
 		Voice:  voice,
 	})
