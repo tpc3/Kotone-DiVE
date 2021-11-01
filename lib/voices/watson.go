@@ -35,7 +35,7 @@ func init() {
 
 func WatsonSynth(content *string, voice *string) (*[]byte, error) {
 	var buf bytes.Buffer
-	err := xml.EscapeText(&buf, []byte(*voice))
+	err := xml.EscapeText(&buf, []byte(*content))
 	if err != nil {
 		return nil, err
 	}
