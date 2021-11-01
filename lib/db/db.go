@@ -16,6 +16,7 @@ var (
 	guildCache      map[string]*config.Guild
 	ConnectionCache map[string]*discordgo.VoiceConnection
 	RegexCache      map[string]*map[*regexp.Regexp]*string
+	ChannelCache    map[string]*string
 	VoiceCache      *cache.Cache
 	VoiceLock       map[string]*sync.Mutex
 	userCache       map[string]*config.User
@@ -27,6 +28,7 @@ func init() {
 	userCache = map[string]*config.User{}
 	ConnectionCache = map[string]*discordgo.VoiceConnection{}
 	RegexCache = map[string]*map[*regexp.Regexp]*string{}
+	ChannelCache = map[string]*string{}
 	VoiceCache = cache.New(24*time.Hour, 1*time.Hour)
 	VoiceLock = map[string]*sync.Mutex{}
 	switch config.CurrentConfig.Db.Kind {

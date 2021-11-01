@@ -15,8 +15,10 @@ func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 	if exists {
 		err := db.ConnectionCache[orgMsg.GuildID].Disconnect()
 		delete(db.ConnectionCache, orgMsg.GuildID)
+		delete(db.ChannelCache, orgMsg.GuildID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+			return
 		}
 		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👋")
 	} else {
