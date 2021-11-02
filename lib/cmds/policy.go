@@ -70,8 +70,8 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return
-		} else {
-			session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
 		}
+		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
+
 	}
 }

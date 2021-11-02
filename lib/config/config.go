@@ -87,7 +87,7 @@ func init() {
 	}
 }
 
-//You should call voices.Verify before runnning this!
+//You should call voices.Verify before running this!
 func VerifyGuild(guild *Guild) error {
 	val, exists := Lang[guild.Lang]
 	if !exists {

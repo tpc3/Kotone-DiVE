@@ -101,9 +101,8 @@ func LoadUserBbolt(id *string) (*config.User, error) {
 	}
 	if exists {
 		return &user, nil
-	} else {
-		return nil, nil
 	}
+	return nil, nil
 }
 
 func SaveUserBbolt(id *string, user *config.User) error {

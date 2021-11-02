@@ -9,8 +9,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/IBM/go-sdk-core/core"
-	"github.com/watson-developer-cloud/go-sdk/texttospeechv1"
+	"github.com/IBM/go-sdk-core/v5/core"
+	"github.com/watson-developer-cloud/go-sdk/v2/texttospeechv1"
 )
 
 var (
@@ -50,21 +50,20 @@ func WatsonSynth(content *string, voice *string) (*[]byte, error) {
 	}
 	if err != nil {
 		return nil, err
-	} else {
-		if response.StatusCode != 200 {
-			// ???
-			return nil, errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
-		}
-		if result != nil {
-			bin, err := io.ReadAll(result)
-			if err != nil {
-				return nil, err
-			}
-			result.Close()
-			return &bin, nil
-		}
-		return nil, nil
 	}
+	if response.StatusCode != 200 {
+		// ???
+		return nil, errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
+	}
+	if result != nil {
+		bin, err := io.ReadAll(result)
+		if err != nil {
+			return nil, err
+		}
+		result.Close()
+		return &bin, nil
+	}
+	return nil, nil
 }
 
 func WatsonVerify(voice *string) error {
@@ -74,15 +73,14 @@ func WatsonVerify(voice *string) error {
 	}
 	if err != nil {
 		return err
-	} else {
-		if response.StatusCode != 200 {
-			return errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
-		}
-		if result != nil {
-			for _, v := range result.Voices {
-				if *v.Name == *voice {
-					return nil
-				}
+	}
+	if response.StatusCode != 200 {
+		return errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
+	}
+	if result != nil {
+		for _, v := range result.Voices {
+			if *v.Name == *voice {
+				return nil
 			}
 		}
 	}

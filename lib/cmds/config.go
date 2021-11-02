@@ -30,12 +30,14 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			return
 		}
 		guild.Prefix = parsed[2]
+
 	case "lang":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}
 		guild.Lang = parsed[2]
+
 	case "maxchar":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -45,9 +47,9 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
-		} else {
-			guild.MaxChar = i
 		}
+		guild.MaxChar = i
+
 	case "voice":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -62,10 +64,10 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+err.Error()))
 			return
-		} else {
-			guild.Voice.Source = opt[0]
-			guild.Voice.Type = opt[1]
 		}
+		guild.Voice.Source = opt[0]
+		guild.Voice.Type = opt[1]
+
 	case "readbots":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -75,9 +77,9 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
-		} else {
-			guild.ReadBots = i
 		}
+		guild.ReadBots = i
+
 	case "readname":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -87,9 +89,9 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
-		} else {
-			guild.ReadName = i
 		}
+		guild.ReadName = i
+
 	case "policy":
 		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -108,8 +110,7 @@ func ConfigCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return
-		} else {
-			session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
 		}
+		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
 	}
 }

@@ -37,10 +37,10 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+err.Error()))
 			return
-		} else {
-			user.Voice.Source = options[0]
-			user.Voice.Type = options[1]
 		}
+		user.Voice.Source = options[0]
+		user.Voice.Type = options[1]
+
 	case "delete":
 		err := db.DeleteUser(&orgMsg.Author.ID)
 		if err != nil {
@@ -48,6 +48,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		}
 		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "👍")
 		return
+
 	default:
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return

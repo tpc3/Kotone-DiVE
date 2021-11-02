@@ -95,25 +95,23 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 		if bin == nil {
 			//Nothing to read
 			return nil, nil
-		} else {
-
-			//Send voice
-			if config.CurrentConfig.Debug {
-				log.Print(strconv.Itoa(len(*bin)), " bytes audio.")
-			}
-
-			result, err := dca.EncodeMem(bytes.NewReader(*bin), dca.StdEncodeOptions)
-			defer result.Cleanup()
-			if err != nil {
-				return nil, err
-			} else {
-				bin, err := io.ReadAll(result)
-				if err != nil {
-					return nil, err
-				}
-				db.VoiceCache.Add(crc, bin, cache.DefaultExpiration)
-			}
 		}
+
+		//Send voice
+		if config.CurrentConfig.Debug {
+			log.Print(strconv.Itoa(len(*bin)), " bytes audio.")
+		}
+
+		result, err := dca.EncodeMem(bytes.NewReader(*bin), dca.StdEncodeOptions)
+		defer result.Cleanup()
+		if err != nil {
+			return nil, err
+		}
+		encBin, err := io.ReadAll(result)
+		if err != nil {
+			return nil, err
+		}
+		db.VoiceCache.Add(crc, encBin, cache.DefaultExpiration)
 	}
 
 	value, _ := db.VoiceCache.Get(crc)
@@ -156,7 +154,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 				compiled[regex] = &text
 			} else {
 				if trace {
-					logStr += "|-Error occured while compiling.\n" + err.Error() + ".\n|-Skipping...\n"
+					logStr += "|-Error occurred while compiling.\n" + err.Error() + ".\n|-Skipping...\n"
 				}
 			}
 		}
