@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -54,15 +53,17 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 			cmds.UserCmd(session, orgMsg, guild)
 		case cmds.Debug:
 			cmds.DebugCmd(session, orgMsg, &guild)
+		case cmds.Skip:
+			cmds.SkipCmd(session, orgMsg, &guild)
 		}
 		if config.CurrentConfig.Debug {
 			log.Print("Processed in ", time.Since(start).Milliseconds(), "ms.")
 		}
 		return
 	}
-	_, exists := db.ConnectionCache[orgMsg.GuildID]
+	_, exists := db.StateCache[orgMsg.GuildID]
 	if exists {
-		if *db.ChannelCache[orgMsg.GuildID] == orgMsg.ChannelID {
+		if db.StateCache[orgMsg.GuildID].Channel == orgMsg.ChannelID {
 			ttsHandler(session, orgMsg, &guild)
 		}
 	}
@@ -123,24 +124,34 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
 
-	_, exists := db.VoiceLock[orgMsg.GuildID]
-	if !exists {
-		db.VoiceLock[orgMsg.GuildID] = &sync.Mutex{}
-	}
-	db.VoiceLock[orgMsg.GuildID].Lock()
-	defer db.VoiceLock[orgMsg.GuildID].Unlock()
-	db.ConnectionCache[orgMsg.GuildID].Speaking(true)
-	defer db.ConnectionCache[orgMsg.GuildID].Speaking(false)
+	db.StateCache[orgMsg.GuildID].Lock.Lock()
+	defer db.StateCache[orgMsg.GuildID].Lock.Unlock()
+	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
+	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
 	done := make(chan error)
-	dca.NewStream(encoded, db.ConnectionCache[orgMsg.GuildID], done)
-	err = <-done
-	if err != nil && err != io.EOF {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+	stream := dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
+
+	for {
+		select {
+		case err := <-done:
+			if err != nil && err != io.EOF {
+				session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+			}
+
+			return
+		default:
+			if db.StateCache[orgMsg.GuildID].SkipRequest {
+				db.StateCache[orgMsg.GuildID].SkipRequest = false
+				stream.SetPaused(true)
+				close(done)
+				return
+			}
+		}
 	}
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
-	selfState, exists := db.ConnectionCache[state.GuildID]
+	selfState, exists := db.StateCache[state.GuildID]
 	if !exists {
 		return // Bot isn't connected
 	}
@@ -150,13 +161,13 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
 	for _, userState := range guild.VoiceStates {
-		if selfState.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
+		if selfState.Connection.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
 			alone = false
 		}
 	}
 	if alone {
-		err := db.ConnectionCache[state.GuildID].Disconnect()
-		delete(db.ConnectionCache, state.GuildID)
+		err := db.StateCache[state.GuildID].Connection.Disconnect()
+		delete(db.StateCache, state.GuildID)
 		if err != nil {
 			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}

@@ -7,16 +7,18 @@ type Strings struct {
 }
 
 type errorstr struct {
-	Title   string
-	Unknown string
-	SubCmd  string
-	Voice   string
-	Join    joinerrorstr
-	Leave   leaveerrorstr
-	Guild   guilderrorstr
-	Config  configerrorstr
-	Replace replaceerrorstr
-	Policy  policyerrorstr
+	Title     string
+	Unknown   string
+	SubCmd    string
+	Voice     string
+	Joinfirst string
+	Join      joinerrorstr
+	Leave     leaveerrorstr
+	Guild     guilderrorstr
+	Config    configerrorstr
+	Replace   replaceerrorstr
+	Policy    policyerrorstr
+	Skip      skiperrorstr
 }
 
 type guilderrorstr struct {
@@ -26,9 +28,8 @@ type guilderrorstr struct {
 }
 
 type joinerrorstr struct {
-	Already   string
-	Joinfirst string
-	Failed    string
+	Already string
+	Failed  string
 }
 
 type leaveerrorstr struct {
@@ -50,6 +51,10 @@ type policyerrorstr struct {
 	NotExists string
 }
 
+type skiperrorstr struct {
+	NotPlaying string
+}
+
 var (
 	Lang map[string]Strings
 )
@@ -60,14 +65,14 @@ func loadLang() {
 		Lang: "japanese",
 		Help: "Botの使い方に関しては、Wikiをご覧ください。",
 		Error: errorstr{
-			Title:   "エラー",
-			Unknown: "不明なエラーが発生しました。\nこの問題は管理者に報告されます。",
-			SubCmd:  "サブコマンドが不正です。",
-			Voice:   "そのようなボイスは存在しません。",
+			Title:     "エラー",
+			Unknown:   "不明なエラーが発生しました。\nこの問題は管理者に報告されます。",
+			SubCmd:    "サブコマンドが不正です。",
+			Voice:     "そのようなボイスは存在しません。",
+			Joinfirst: "まずはVCに参加してください。",
 			Join: joinerrorstr{
-				Already:   "既にVCに接続済です。",
-				Joinfirst: "まずはVCに参加してください。",
-				Failed:    "接続に失敗しました。権限設定をご確認ください。",
+				Already: "既にVCに接続済です。",
+				Failed:  "接続に失敗しました。権限設定をご確認ください。",
 			},
 			Leave: leaveerrorstr{
 				None: "VCに参加していません。",
@@ -81,12 +86,16 @@ func loadLang() {
 				Value: "不正な設定値です。",
 			},
 			Replace: replaceerrorstr{
-				Regex: "正規表現が間違っています。",
-				Del:   "削除対象が見つかりません。",
+				Regex:  "正規表現が間違っています。",
+				Del:    "削除対象が見つかりません。",
+				Syntax: "コマンド文法エラーです。",
 			},
 			Policy: policyerrorstr{
 				Exists:    "ポリシーが既に存在しています。",
 				NotExists: "ポリシーが存在しません。",
+			},
+			Skip: skiperrorstr{
+				NotPlaying: "読み上げ中ではありません。",
 			},
 		},
 	}
@@ -95,14 +104,14 @@ func loadLang() {
 
 		Help: "Usage is available on the Wiki.",
 		Error: errorstr{
-			Title:   "Error",
-			Unknown: "Unknown Error!\nThis will be reported.",
-			SubCmd:  "Invalid subcommand.",
-			Voice:   "No such voice.",
+			Title:     "Error",
+			Unknown:   "Unknown Error!\nThis will be reported.",
+			SubCmd:    "Invalid subcommand.",
+			Voice:     "No such voice.",
+			Joinfirst: "You must join VC first",
 			Join: joinerrorstr{
-				Already:   "I've already joined.",
-				Joinfirst: "You must join VC first",
-				Failed:    "Connection failed. please check your server permissions.",
+				Already: "I've already joined.",
+				Failed:  "Connection failed. please check your server permissions.",
 			},
 			Leave: leaveerrorstr{
 				None: "No VC to leave.",
@@ -123,6 +132,9 @@ func loadLang() {
 			Policy: policyerrorstr{
 				Exists:    "Policy already exists.",
 				NotExists: "Policy doesn't exists.",
+			},
+			Skip: skiperrorstr{
+				NotPlaying: "I'm not playing anything.",
 			},
 		},
 	}

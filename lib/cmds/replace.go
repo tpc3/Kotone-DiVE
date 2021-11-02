@@ -23,6 +23,10 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	}
 	switch parsed[1] {
 	case "set":
+		if len(parsed) < 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
+			return
+		}
 		options, err := shellquote.Split(parsed[2])
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
@@ -39,17 +43,28 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		}
 		guild.Replace[options[0]] = options[1]
 	case "del":
+		if len(parsed) < 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
+			return
+		}
 		_, exists := guild.Replace[parsed[2]]
 		if exists {
 			delete(guild.Replace, parsed[2])
 		} else {
-			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Regex))
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Del))
 			return
 		}
 	case "delnum":
-		val, err := strconv.Atoi(parsed[2])
-		if err != nil || len(guild.Replace) <= val || val < 0 {
+		if len(parsed) < 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
+			return
+		}
+		val, err := strconv.Atoi(parsed[2])
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Syntax))
+			return
+		} else if len(guild.Replace) <= val || val < 0 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Del))
 			return
 		}
 		var keys []string

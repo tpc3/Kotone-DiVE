@@ -4,6 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -11,7 +12,7 @@ import (
 const Join = "join"
 
 func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildconf *config.Guild) {
-	_, exists := db.ConnectionCache[orgMsg.GuildID]
+	_, exists := db.StateCache[orgMsg.GuildID]
 	if exists {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Already))
 	} else {
@@ -25,12 +26,16 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 				if err != nil {
 					session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Failed))
 				}
-				db.ConnectionCache[orgMsg.GuildID] = voice
-				db.ChannelCache[orgMsg.GuildID] = &orgMsg.ChannelID
+				db.StateCache[orgMsg.GuildID] = &db.GuildVCState{
+					Lock:        sync.Mutex{},
+					Channel:     orgMsg.ChannelID,
+					SkipRequest: false,
+					Connection:  voice,
+				}
 				session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "🖐")
 				return
 			}
 		}
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Joinfirst))
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Joinfirst))
 	}
 }
