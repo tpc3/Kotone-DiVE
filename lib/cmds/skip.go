@@ -15,7 +15,9 @@ func SkipCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 	if !exists {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Joinfirst))
 	} else {
-		val.SkipRequest = true
+		//val.SkipRequest = true
+		val.Stream.SetPaused(true)
+		close(*val.Done)
 		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "⏩")
 	}
 }

@@ -129,24 +129,12 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
 	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
 	done := make(chan error)
-	stream := dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
+	db.StateCache[orgMsg.GuildID].Done = &done
+	db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
 
-	for {
-		select {
-		case err := <-done:
-			if err != nil && err != io.EOF {
-				session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
-			}
-
-			return
-		default:
-			if db.StateCache[orgMsg.GuildID].SkipRequest {
-				db.StateCache[orgMsg.GuildID].SkipRequest = false
-				stream.SetPaused(true)
-				close(done)
-				return
-			}
-		}
+	err = <-done
+	if err != nil && err != io.EOF {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
 }
 

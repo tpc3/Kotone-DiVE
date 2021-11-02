@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/jonas747/dca"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -23,6 +24,8 @@ type GuildVCState struct {
 	Channel     string
 	SkipRequest bool
 	Connection  *discordgo.VoiceConnection
+	Done        *chan error
+	Stream      *dca.StreamingSession
 }
 
 func init() {
