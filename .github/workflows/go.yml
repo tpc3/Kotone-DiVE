@@ -49,7 +49,7 @@ jobs:
     - name: Build
       run: mkdir -p bin/${{ matrix.goos }}/${{ matrix.goarch }}
     - name: Build
-      run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/Kotone-DiVE
+      run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/
       env:
         CGO_ENABLED: 0
         GOARCH: ${{ matrix.goarch }}
