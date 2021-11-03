@@ -126,6 +126,8 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	runeContent := []rune(*replaced)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])
+	} else {
+		content = *replaced
 	}
 	encoded, err := voices.GetVoice(session, &content, voice)
 	if err != nil {
