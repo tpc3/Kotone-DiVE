@@ -52,7 +52,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 			return
 		}
 		user.Name = parsed[2]
-	case "delete":
+	case "del":
 		err := db.DeleteUser(&orgMsg.Author.ID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
