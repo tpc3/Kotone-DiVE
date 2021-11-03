@@ -97,9 +97,8 @@ func SaveUser(id *string, user *config.User) error {
 	}
 	if err != nil {
 		log.Print("WARN: SaveUser error:", err.Error())
-	} else {
-		delete(userCache, *id)
 	}
+	delete(userCache, *id)
 	return err
 }
 
@@ -112,5 +111,6 @@ func DeleteUser(id *string) error {
 	if err != nil {
 		log.Print("WARN: DeleteUser error:", err)
 	}
+	delete(userCache, *id)
 	return err
 }
