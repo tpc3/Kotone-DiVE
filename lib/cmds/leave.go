@@ -13,6 +13,8 @@ const Leave = "leave"
 func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild *config.Guild) {
 	_, exists := db.StateCache[orgMsg.GuildID]
 	if exists {
+		db.StateCache[orgMsg.GuildID].Stream.SetPaused(true)
+		close(*db.StateCache[orgMsg.GuildID].Done)
 		err := db.StateCache[orgMsg.GuildID].Connection.Disconnect()
 		delete(db.StateCache, orgMsg.GuildID)
 		if err != nil {
