@@ -111,7 +111,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	var voice *config.Voice
 	user, err := db.LoadUser(&orgMsg.Author.ID)
 
-	if err != nil || guild.Voice.Source == "" {
+	if err != nil || user.Voice.Source == "" {
 		voice = &guild.Voice
 	} else {
 		voice = &user.Voice
