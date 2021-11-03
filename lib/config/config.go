@@ -56,6 +56,7 @@ type Guild struct {
 }
 type User struct {
 	Voice Voice
+	Name  string
 }
 type Voice struct {
 	Source string

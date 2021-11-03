@@ -27,10 +27,9 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 					session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Failed))
 				}
 				db.StateCache[orgMsg.GuildID] = &db.GuildVCState{
-					Lock:        sync.Mutex{},
-					Channel:     orgMsg.ChannelID,
-					SkipRequest: false,
-					Connection:  voice,
+					Lock:       sync.Mutex{},
+					Channel:    orgMsg.ChannelID,
+					Connection: voice,
 				}
 				session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "🖐")
 				return

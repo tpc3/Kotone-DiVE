@@ -16,7 +16,13 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 	parsed := strings.SplitN(orgMsg.Content, " ", 3)
 	user, err := db.LoadUser(&orgMsg.Author.ID)
 	if err != nil {
-		user = config.User{}
+		user = config.User{
+			Voice: config.Voice{
+				Source: "",
+				Type:   "",
+			},
+			Name: "",
+		}
 	}
 	if len(parsed) < 2 {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
@@ -40,7 +46,12 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		}
 		user.Voice.Source = options[0]
 		user.Voice.Type = options[1]
-
+	case "name":
+		if len(parsed) < 3 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
+			return
+		}
+		user.Name = parsed[2]
 	case "delete":
 		err := db.DeleteUser(&orgMsg.Author.ID)
 		if err != nil {

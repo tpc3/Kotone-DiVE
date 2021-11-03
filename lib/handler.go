@@ -28,7 +28,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
-	if orgMsg.Author.ID == session.State.User.ID {
+	if orgMsg.Author.ID == session.State.User.ID || orgMsg.Content == "" {
 		return
 	}
 	if strings.HasPrefix(orgMsg.Content, guild.Prefix) {
@@ -73,24 +73,20 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 }
 
 func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild *config.Guild) {
+
 	if !guild.ReadBots && orgMsg.Author.Bot {
 		return
 	}
+
 	content, err := orgMsg.ContentWithMoreMentionsReplaced(session)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		return
 	}
+
 	runeContent := []rune(orgMsg.Content)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])
-	}
-	if guild.ReadName {
-		if orgMsg.Member.Nick != "" {
-			content = orgMsg.Member.Nick + " " + content
-		} else {
-			content = strings.Split(orgMsg.Author.Username, "#")[0] + " " + content
-		}
 	}
 
 	switch guild.Policy {
@@ -111,13 +107,26 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 			return
 		}
 	}
+
 	var voice *config.Voice
 	user, err := db.LoadUser(&orgMsg.Author.ID)
-	if err != nil {
+
+	if err != nil || guild.Voice.Source == "" {
 		voice = &guild.Voice
 	} else {
 		voice = &user.Voice
 	}
+
+	if guild.ReadName {
+		if user.Name != "" {
+			content = user.Name + " " + content
+		} else if orgMsg.Member.Nick != "" {
+			content = orgMsg.Member.Nick + " " + content
+		} else {
+			content = strings.Split(orgMsg.Author.Username, "#")[0] + " " + content
+		}
+	}
+
 	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
 	encoded, err := voices.GetVoice(session, replaced, voice)
 	if err != nil {

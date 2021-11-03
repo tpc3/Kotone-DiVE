@@ -20,12 +20,11 @@ var (
 )
 
 type GuildVCState struct {
-	Lock        sync.Mutex
-	Channel     string
-	SkipRequest bool
-	Connection  *discordgo.VoiceConnection
-	Done        *chan error
-	Stream      *dca.StreamingSession
+	Lock       sync.Mutex
+	Channel    string
+	Connection *discordgo.VoiceConnection
+	Done       *chan error
+	Stream     *dca.StreamingSession
 }
 
 func init() {
