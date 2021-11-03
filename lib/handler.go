@@ -84,11 +84,6 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	runeContent := []rune(orgMsg.Content)
-	if len(runeContent) > guild.MaxChar {
-		content = string(runeContent[:guild.MaxChar])
-	}
-
 	switch guild.Policy {
 	case "allow":
 		for k := range guild.PolicyList {
@@ -125,6 +120,11 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		} else {
 			content = strings.Split(orgMsg.Author.Username, "#")[0] + " " + content
 		}
+	}
+
+	runeContent := []rune(content)
+	if len(runeContent) > guild.MaxChar {
+		content = string(runeContent[:guild.MaxChar])
 	}
 
 	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
