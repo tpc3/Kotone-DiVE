@@ -89,7 +89,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		if orgMsg.Member.Nick != "" {
 			content = orgMsg.Member.Nick + " " + content
 		} else {
-			content = strings.Split(orgMsg.Member.User.Username, "#")[0] + " " + content
+			content = strings.Split(orgMsg.Author.Username, "#")[0] + " " + content
 		}
 	}
 
