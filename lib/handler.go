@@ -122,13 +122,12 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		}
 	}
 
-	runeContent := []rune(content)
+	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
+	runeContent := []rune(*replaced)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])
 	}
-
-	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
-	encoded, err := voices.GetVoice(session, replaced, voice)
+	encoded, err := voices.GetVoice(session, &content, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
