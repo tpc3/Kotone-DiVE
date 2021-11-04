@@ -25,7 +25,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}
-		guild.PolicyList[orgMsg.Author.ID] = orgMsg.Author.Username
+		guild.PolicyList[orgMsg.Mentions[0].ID] = orgMsg.Mentions[0].Username
 	case "del":
 		if len(orgMsg.Mentions) != 1 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -36,7 +36,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Policy.NotExists))
 			return
 		}
-		delete(guild.PolicyList, orgMsg.Author.ID)
+		delete(guild.PolicyList, orgMsg.Mentions[0].ID)
 	case "list":
 		var keys []string
 		for k := range guild.PolicyList {
@@ -45,14 +45,14 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		sort.Strings(keys)
 		text := ""
 		for i, v := range keys {
-			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.Replace[v] + "\"\n"
+			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.PolicyList[v] + "\"\n"
 		}
 		desc := "```\n" + text + "```"
 		if len(desc) > 2048 {
 			session.ChannelFileSend(orgMsg.ChannelID, "list.txt", strings.NewReader(text))
 		} else {
 			msg := embed.NewEmbed(session, orgMsg)
-			msg.Title = strings.Title(Replace)
+			msg.Title = strings.Title(Policy)
 			msg.Description = desc
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 		}
