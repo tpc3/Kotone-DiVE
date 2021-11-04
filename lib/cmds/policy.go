@@ -28,7 +28,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}
-		guild.PolicyList[orgMsg.Author.ID] = orgMsg.Author.Username
+		guild.PolicyList[orgMsg.Mentions[0].ID] = orgMsg.Mentions[0].Username
 	case "del":
 		if len(orgMsg.Mentions) != 1 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
@@ -39,7 +39,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Policy.NotExists))
 			return
 		}
-		delete(guild.PolicyList, orgMsg.Author.ID)
+		delete(guild.PolicyList, orgMsg.Mentions[0].ID)
 	case "list":
 		if len(guild.Replace) == 0 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Empty))
@@ -52,7 +52,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		sort.Strings(keys)
 		text := ""
 		for i, v := range keys {
-			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.Replace[v] + "\"\n"
+			text += "[" + strconv.Itoa(i) + "] \"" + v + "\" => \"" + guild.PolicyList[v] + "\"\n"
 		}
 		desc := "```\n" + text + "```"
 		if len(desc) > 2048 {
