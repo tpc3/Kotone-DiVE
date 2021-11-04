@@ -44,11 +44,13 @@ type replaceerrorstr struct {
 	Syntax string
 	Regex  string
 	Del    string
+	Empty  string
 }
 
 type policyerrorstr struct {
 	Exists    string
 	NotExists string
+	Empty     string
 }
 
 type skiperrorstr struct {
@@ -89,10 +91,12 @@ func loadLang() {
 				Regex:  "正規表現が間違っています。",
 				Del:    "削除対象が見つかりません。",
 				Syntax: "コマンド文法エラーです。",
+				Empty:  "空の置換リストを表示することはできません。",
 			},
 			Policy: policyerrorstr{
 				Exists:    "ポリシーが既に存在しています。",
 				NotExists: "ポリシーが存在しません。",
+				Empty:     "空のポリシーを表示することはできません。",
 			},
 			Skip: skiperrorstr{
 				NotPlaying: "読み上げ中ではありません。",
@@ -127,11 +131,13 @@ func loadLang() {
 			Replace: replaceerrorstr{
 				Syntax: "Command syntax error.",
 				Regex:  "Invalid regex.",
-				Del:    "So such key in the database",
+				Del:    "So such key in the database.",
+				Empty:  "Cannot print empty replace list.",
 			},
 			Policy: policyerrorstr{
 				Exists:    "Policy already exists.",
 				NotExists: "Policy doesn't exists.",
+				Empty:     "Cannot print empty policy list.",
 			},
 			Skip: skiperrorstr{
 				NotPlaying: "I'm not playing anything.",

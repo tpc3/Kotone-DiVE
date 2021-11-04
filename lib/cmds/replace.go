@@ -21,6 +21,9 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
 	}
+	if guild.Replace == nil {
+		guild.Replace = map[string]string{}
+	}
 	switch parsed[1] {
 	case "set":
 		if len(parsed) < 3 {
@@ -75,6 +78,10 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		delete(guild.Replace, keys[val])
 
 	case "list":
+		if len(guild.Replace) == 0 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Empty))
+			return
+		}
 		var keys []string
 		for k := range guild.Replace {
 			keys = append(keys, k)
