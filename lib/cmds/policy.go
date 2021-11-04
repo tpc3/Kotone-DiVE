@@ -19,6 +19,9 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
 	}
+	if guild.PolicyList == nil {
+		guild.PolicyList = map[string]string{}
+	}
 	switch parsed[1] {
 	case "add":
 		if len(orgMsg.Mentions) != 1 {
@@ -38,6 +41,10 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 		}
 		delete(guild.PolicyList, orgMsg.Mentions[0].ID)
 	case "list":
+		if len(guild.Replace) == 0 {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Replace.Empty))
+			return
+		}
 		var keys []string
 		for k := range guild.PolicyList {
 			keys = append(keys, k)
