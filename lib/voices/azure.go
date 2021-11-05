@@ -49,6 +49,9 @@ func init() {
 		log.Fatal(err)
 	}
 	getReq.Header.Add("Ocp-Apim-Subscription-Key", config.CurrentConfig.Voices.Azure.Key)
+	if httpCli == nil {
+		httpCli = &http.Client{}
+	}
 	res, err := httpCli.Do(getReq)
 	if err != nil {
 		log.Fatal(err)
