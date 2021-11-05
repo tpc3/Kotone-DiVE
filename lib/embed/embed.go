@@ -29,6 +29,7 @@ func NewEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate) *disc
 	msg.Author.Name = session.State.User.Username
 	msg.Footer.IconURL = orgMsg.Author.AvatarURL("256")
 	msg.Footer.Text = "Request from " + orgMsg.Author.Username + " @ " + now.String()
+	msg.Color = ColorBlue
 	return msg
 }
 
