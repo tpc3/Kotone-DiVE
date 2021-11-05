@@ -176,6 +176,9 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		}
 	}
 	if alone {
+		db.StateCache[state.GuildID].Stream.SetPaused(true)
+		close(*db.StateCache[state.GuildID].Done)
+		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
 		err := db.StateCache[state.GuildID].Connection.Disconnect()
 		delete(db.StateCache, state.GuildID)
 		if err != nil {
