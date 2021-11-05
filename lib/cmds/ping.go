@@ -33,7 +33,7 @@ func PingCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
 	})
 	msg.Fields = append(msg.Fields, &discordgo.MessageEmbedField{
 		Name:  "Kotone-DiVE!",
-		Value: "```\n" + strconv.Itoa(db.VoiceCache.ItemCount()) + " voices cached,\n" + strconv.Itoa(len(db.StateCache)) + " VCs ongoing,\n" + strconv.Itoa(embed.UnknownErrorNum) + "Unknown errors.```",
+		Value: "```\n" + strconv.Itoa(db.VoiceCache.ItemCount()) + " voices cached,\n" + strconv.Itoa(len(db.StateCache)) + " VCs ongoing,\n" + strconv.Itoa(embed.UnknownErrorNum) + " Unknown errors.```",
 	})
 	session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 }

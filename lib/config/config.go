@@ -38,6 +38,10 @@ type Config struct {
 			Key     string
 			Region  string
 		}
+		VoiceText struct {
+			Enabled bool
+			Token   string
+		}
 	}
 	Guild Guild
 	User  User

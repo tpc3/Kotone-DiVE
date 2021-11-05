@@ -8,6 +8,7 @@ import (
 	"Kotone-DiVE/lib/voices"
 	"io"
 	"log"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -24,7 +25,14 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 	if config.CurrentConfig.Debug {
 		start = time.Now()
 	}
+
 	guild := db.LoadGuild(&orgMsg.GuildID)
+	defer func() {
+		if err := recover(); err != nil {
+			log.Print("Oops, ", err)
+			debug.PrintStack()
+		}
+	}()
 
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
@@ -132,6 +140,10 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	encoded, err := voices.GetVoice(session, &content, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+	}
+	if encoded == nil {
+		// Nothing to read
+		return
 	}
 
 	db.StateCache[orgMsg.GuildID].Lock.Lock()

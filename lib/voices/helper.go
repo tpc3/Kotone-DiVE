@@ -8,6 +8,7 @@ import (
 	"hash/crc64"
 	"io"
 	"log"
+	"net/http"
 	"regexp"
 	"strconv"
 	"time"
@@ -20,10 +21,12 @@ import (
 var (
 	Voices      []string
 	configRegex map[*regexp.Regexp]string
+	httpCli     *http.Client
 )
 
 func init() {
 	Voices = []string{Watson, Gtts}
+	httpCli = &http.Client{}
 	configRegex = map[*regexp.Regexp]string{}
 	for k, v := range config.CurrentConfig.Replace {
 		configRegex[regexp.MustCompile(k)] = v
@@ -52,6 +55,11 @@ func VerifyVoice(source *string, voice *string, voiceerror string) error {
 			return errors.New(voiceerror)
 		}
 		return AzureVerify(voice)
+	case VoiceText:
+		if !config.CurrentConfig.Voices.VoiceText.Enabled {
+			return errors.New(voiceerror)
+		}
+		return VoiceTextVerify(voice)
 	default:
 		return errors.New(voiceerror)
 	}
@@ -86,6 +94,11 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 				return nil, errors.New("voice is not available:" + Azure)
 			}
 			bin, err = AzureSynth(message, &voice.Type)
+		case VoiceText:
+			if !config.CurrentConfig.Voices.VoiceText.Enabled {
+				return nil, errors.New("voice is not available:" + VoiceText)
+			}
+			bin, err = VoiceTextSynth(message, &voice.Type)
 		default:
 			return nil, errors.New("No such voice source:" + voice.Source)
 		}
