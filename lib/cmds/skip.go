@@ -4,6 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
+	"io"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,8 +16,10 @@ func SkipCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 	if !exists {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Joinfirst))
 	} else {
-		val.Stream.SetPaused(true)
-		close(*val.Done)
-		session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "⏩")
+		if val.Stream != nil {
+			val.Stream.SetPaused(true)
+			*val.Done <- io.EOF
+			session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "⏩")
+		}
 	}
 }

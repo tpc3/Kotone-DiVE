@@ -4,6 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
+	"io"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -16,7 +17,7 @@ func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 	if exists {
 		if db.StateCache[orgMsg.GuildID].Stream != nil {
 			db.StateCache[orgMsg.GuildID].Stream.SetPaused(true)
-			close(*db.StateCache[orgMsg.GuildID].Done)
+			*db.StateCache[orgMsg.GuildID].Done <- io.EOF
 			time.Sleep(100 * time.Millisecond) // Super duper dirty hack
 		}
 		err := db.StateCache[orgMsg.GuildID].Connection.Disconnect()
