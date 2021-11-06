@@ -1,5 +1,8 @@
 debug: true
-replace: {}
+replace: 
+  "https?://[\\w+.:?#[\\]@!$&'()~*,;=/-]+": "URL"
+  "<a?:.*?:.*?>": ""
+  "\\|\\|[\\s\\S]*?\\|\\|": ""
 help: https://github.com/tpc3/Kotone-DiVE/wiki
 discord:
   token:
@@ -9,7 +12,7 @@ db:
   path: bbolt.db
 voices:
   watson:
-    enabled: true
+    enabled: false
     token:
     api:
   gtts:
@@ -21,13 +24,16 @@ voices:
     enabled: false
     key: 
     region: 
+  voicetext:
+    enabled: false
+    token:
 guild:
   prefix: .
   lang: japanese
   maxchar: 100
   voice: # Values under this section are not verified before running! Be careful
-    source: watson
-    type: ja-JP_EmiVoice
+    source: gtts
+    type: ja
   readbots: false
   readname: true
   policy: allow
