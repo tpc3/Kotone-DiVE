@@ -158,6 +158,9 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	if err != nil && err != io.EOF {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
+	db.StateCache[orgMsg.GuildID].Stream = nil
+	db.StateCache[orgMsg.GuildID].Done = nil
+	close(done)
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
@@ -176,9 +179,11 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		}
 	}
 	if alone {
-		db.StateCache[state.GuildID].Stream.SetPaused(true)
-		close(*db.StateCache[state.GuildID].Done)
-		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
+		if db.StateCache[state.GuildID].Stream != nil {
+			db.StateCache[state.GuildID].Stream.SetPaused(true)
+			*db.StateCache[state.GuildID].Done <- io.EOF
+			time.Sleep(100 * time.Millisecond) // Super duper dirty hack
+		}
 		err := db.StateCache[state.GuildID].Connection.Disconnect()
 		delete(db.StateCache, state.GuildID)
 		if err != nil {
