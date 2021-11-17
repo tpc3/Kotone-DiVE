@@ -9,11 +9,19 @@ import (
 	"os"
 	"os/signal"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/common-nighthawk/go-figure"
 )
 
 func init() {
+	if config.CurrentConfig.Debug {
+		go func() {
+			log.Println(http.ListenAndServe("localhost:6060", nil))
+		}()
+	}
 	figure.NewColorFigure("Kotone-DiVE", "isometric1", "blue", true).Print()
 	log.SetPrefix("[Init]")
 	log.Print("Starting Kotone-DiVE!")

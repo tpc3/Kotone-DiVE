@@ -6,7 +6,6 @@ import (
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
 	"Kotone-DiVE/lib/voices"
-	"io"
 	"log"
 	"runtime/debug"
 	"strings"
@@ -120,16 +119,6 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		voice = &user.Voice
 	}
 
-	if guild.ReadName {
-		if user.Name != "" {
-			content = user.Name + " " + content
-		} else if orgMsg.Member.Nick != "" {
-			content = orgMsg.Member.Nick + " " + content
-		} else {
-			content = strings.Split(orgMsg.Author.Username, "#")[0] + " " + content
-		}
-	}
-
 	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
 	runeContent := []rune(*replaced)
 	if len(runeContent) > guild.MaxChar {
@@ -137,25 +126,26 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	} else {
 		content = *replaced
 	}
-	encoded, err := voices.GetVoice(session, &content, voice)
-	if err != nil {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
-	}
-	if encoded == nil {
-		// Nothing to read
-		return
-	}
 
 	db.StateCache[orgMsg.GuildID].Lock.Lock()
 	defer db.StateCache[orgMsg.GuildID].Lock.Unlock()
-	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
-	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
-	done := make(chan error)
-	db.StateCache[orgMsg.GuildID].Done = &done
-	db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
 
-	err = <-done
-	if err != nil && err != io.EOF {
+	if guild.ReadName {
+		var name *string
+		if user.Name != "" {
+			name = &user.Name
+		} else if orgMsg.Member.Nick != "" {
+			name = &orgMsg.Member.Nick
+		} else {
+			name = &strings.Split(orgMsg.Author.Username, "#")[0]
+		}
+		err = voices.ReadVoice(session, orgMsg, name, voice)
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		}
+	}
+	err = voices.ReadVoice(session, orgMsg, &content, voice)
+	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
 	db.StateCache[orgMsg.GuildID].Stream = nil

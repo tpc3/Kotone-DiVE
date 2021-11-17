@@ -23,7 +23,14 @@ func DumpCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		obj interface{}
 	)
 	if len(req) == 1 || req[1] != "user" {
-		obj = guild
+		if len(req) == 1 || req[1] != "all" {
+			g := guild
+			g.PolicyList = nil
+			g.Replace = nil
+			obj = g
+		} else {
+			obj = guild
+		}
 	} else {
 		var err error
 		obj, err = db.LoadUser(&orgMsg.Author.ID)

@@ -21,6 +21,7 @@ type Config struct {
 		Path string
 	}
 	Voices struct {
+		Retry  int
 		Watson struct {
 			Enabled bool
 			Token   string
@@ -56,7 +57,7 @@ type Guild struct {
 	ReadName   bool
 	Policy     string
 	PolicyList map[string]string
-	Replace    map[string]string `yaml:",flow"`
+	Replace    map[string]string
 }
 type User struct {
 	Voice Voice

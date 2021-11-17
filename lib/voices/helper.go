@@ -73,44 +73,49 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 	_, exists := db.VoiceCache.Get(crc)
 	if !exists {
 		var bin *[]byte
-		switch voice.Source {
-		case Watson:
-			if !config.CurrentConfig.Voices.Watson.Enabled {
-				return nil, errors.New("voice is not available:" + Watson)
+		for i := 0; i < config.CurrentConfig.Voices.Retry; i++ {
+			switch voice.Source {
+			case Watson:
+				if !config.CurrentConfig.Voices.Watson.Enabled {
+					return nil, errors.New("voice is not available:" + Watson)
+				}
+				bin, err = WatsonSynth(message, &voice.Type)
+			case Gtts:
+				if !config.CurrentConfig.Voices.Gtts.Enabled {
+					return nil, errors.New("voice is not available:" + Gtts)
+				}
+				bin, err = GttsSynth(message, &voice.Type)
+			case Gcp:
+				if !config.CurrentConfig.Voices.Gcp.Enabled {
+					return nil, errors.New("voice is not available:" + Gcp)
+				}
+				bin, err = GcpSynth(message, &voice.Type)
+			case Azure:
+				if !config.CurrentConfig.Voices.Azure.Enabled {
+					return nil, errors.New("voice is not available:" + Azure)
+				}
+				bin, err = AzureSynth(message, &voice.Type)
+			case VoiceText:
+				if !config.CurrentConfig.Voices.VoiceText.Enabled {
+					return nil, errors.New("voice is not available:" + VoiceText)
+				}
+				bin, err = VoiceTextSynth(message, &voice.Type)
+			default:
+				return nil, errors.New("No such voice source:" + voice.Source)
 			}
-			bin, err = WatsonSynth(message, &voice.Type)
-		case Gtts:
-			if !config.CurrentConfig.Voices.Gtts.Enabled {
-				return nil, errors.New("voice is not available:" + Gtts)
+			if err == nil {
+				break
 			}
-			bin, err = GttsSynth(message, &voice.Type)
-		case Gcp:
-			if !config.CurrentConfig.Voices.Gcp.Enabled {
-				return nil, errors.New("voice is not available:" + Gcp)
-			}
-			bin, err = GcpSynth(message, &voice.Type)
-		case Azure:
-			if !config.CurrentConfig.Voices.Azure.Enabled {
-				return nil, errors.New("voice is not available:" + Azure)
-			}
-			bin, err = AzureSynth(message, &voice.Type)
-		case VoiceText:
-			if !config.CurrentConfig.Voices.VoiceText.Enabled {
-				return nil, errors.New("voice is not available:" + VoiceText)
-			}
-			bin, err = VoiceTextSynth(message, &voice.Type)
-		default:
-			return nil, errors.New("No such voice source:" + voice.Source)
 		}
 		if err != nil {
 			return nil, err
 		}
+
 		if bin == nil {
 			//Nothing to read
 			return nil, nil
 		}
 
-		//Send voice
 		if config.CurrentConfig.Debug {
 			log.Print(strconv.Itoa(len(*bin)), " bytes audio.")
 		}
@@ -130,6 +135,30 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 	value, _ := db.VoiceCache.Get(crc)
 	encoded := dca.NewDecoder(bytes.NewReader(value.([]byte)))
 	return encoded, nil
+}
+
+func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, content *string, voice *config.Voice) error {
+	encoded, err := GetVoice(session, content, voice)
+	if err != nil {
+		return err
+	}
+	if encoded == nil {
+		// Nothing to read
+		return nil
+	}
+
+	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
+	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
+
+	done := make(chan error)
+	db.StateCache[orgMsg.GuildID].Done = &done
+	db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
+
+	err = <-done
+	if err != nil && err != io.EOF {
+		return err
+	}
+	return nil
 }
 
 func CleanVoice() {
