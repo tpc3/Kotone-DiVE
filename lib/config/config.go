@@ -84,6 +84,12 @@ func init() {
 	}
 
 	//verify
+	if CurrentConfig.Debug {
+		log.Print("Debug is enabled")
+	}
+	if CurrentConfig.Voices.Retry < 1 {
+		log.Fatal("Retry times must be 1+")
+	}
 	if CurrentConfig.Discord.Token == "" {
 		log.Fatal("Token is empty")
 	}

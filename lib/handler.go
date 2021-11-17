@@ -6,6 +6,7 @@ import (
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
 	"Kotone-DiVE/lib/voices"
+	"io"
 	"log"
 	"runtime/debug"
 	"strings"
@@ -75,7 +76,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 		}
 	}
 	if config.CurrentConfig.Debug {
-		log.Print("Processed in ", time.Since(start).Nanoseconds(), "ns.")
+		log.Print("Processed in ", time.Since(start).Milliseconds(), "ms.")
 	}
 }
 
@@ -127,9 +128,10 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		content = *replaced
 	}
 
-	db.StateCache[orgMsg.GuildID].Lock.Lock()
-	defer db.StateCache[orgMsg.GuildID].Lock.Unlock()
-
+	var (
+		encodedName    *dca.Decoder
+		encodedContent *dca.Decoder
+	)
 	if guild.ReadName {
 		var name *string
 		if user.Name != "" {
@@ -139,18 +141,36 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		} else {
 			name = &strings.Split(orgMsg.Author.Username, "#")[0]
 		}
-		err = voices.ReadVoice(session, orgMsg, name, voice)
-		if err != nil {
-			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
-		}
+		encodedName, err = voices.GetVoice(session, name, voice)
 	}
-	err = voices.ReadVoice(session, orgMsg, &content, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
-	db.StateCache[orgMsg.GuildID].Stream = nil
-	db.StateCache[orgMsg.GuildID].Done = nil
-	close(done)
+	encodedContent, err = voices.GetVoice(session, &content, voice)
+	if err != nil {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
+	}
+	if encodedContent == nil {
+		return
+	}
+
+	db.StateCache[orgMsg.GuildID].Lock.Lock()
+	defer db.StateCache[orgMsg.GuildID].Lock.Unlock()
+
+	if guild.ReadName && encodedName != nil {
+		err = voices.ReadVoice(session, orgMsg, encodedName)
+		if err != nil {
+			if err == voices.Skipped {
+				return
+			}
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		}
+	}
+	err = voices.ReadVoice(session, orgMsg, encodedContent)
+	if err != nil && err != voices.Skipped {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+	}
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {

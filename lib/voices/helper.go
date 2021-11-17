@@ -22,6 +22,7 @@ var (
 	Voices      []string
 	configRegex map[*regexp.Regexp]string
 	httpCli     *http.Client
+	Skipped     error
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	for k, v := range config.CurrentConfig.Replace {
 		configRegex[regexp.MustCompile(k)] = v
 	}
+	Skipped = errors.New("skipped")
 }
 
 func VerifyVoice(source *string, voice *string, voiceerror string) error {
@@ -137,15 +139,7 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 	return encoded, nil
 }
 
-func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, content *string, voice *config.Voice) error {
-	encoded, err := GetVoice(session, content, voice)
-	if err != nil {
-		return err
-	}
-	if encoded == nil {
-		// Nothing to read
-		return nil
-	}
+func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, encoded *dca.Decoder) error {
 
 	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
 	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
@@ -154,10 +148,13 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, cont
 	db.StateCache[orgMsg.GuildID].Done = &done
 	db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
 
-	err = <-done
+	err := <-done
 	if err != nil && err != io.EOF {
 		return err
 	}
+	db.StateCache[orgMsg.GuildID].Stream = nil
+	db.StateCache[orgMsg.GuildID].Done = nil
+	close(done)
 	return nil
 }
 

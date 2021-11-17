@@ -4,7 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
-	"io"
+	"Kotone-DiVE/lib/voices"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -18,7 +18,7 @@ func SkipCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 	} else {
 		if val.Stream != nil {
 			val.Stream.SetPaused(true)
-			*val.Done <- io.EOF
+			*val.Done <- voices.Skipped
 			session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "⏩")
 		}
 	}
