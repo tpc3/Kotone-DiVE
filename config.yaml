@@ -11,6 +11,7 @@ db:
   kind: bbolt
   path: bbolt.db
 voices:
+  retry: 3
   watson:
     enabled: false
     token:
