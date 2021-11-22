@@ -59,9 +59,6 @@ func VoiceTextSynth(content *string, voice *string) (*[]byte, error) {
 	// 400 {"error":{"message":"speaker must be specified"}}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	log.Printf("%+v", req)
-	log.Print(values.Encode())
-
 	res, err := httpCli.Do(&req)
 
 	if err != nil {
