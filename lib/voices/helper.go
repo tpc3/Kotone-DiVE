@@ -141,16 +141,21 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 
 func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, encoded *dca.Decoder) error {
 
-	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
-	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
+	session.VoiceConnections[orgMsg.GuildID].Speaking(true)
+	defer session.VoiceConnections[orgMsg.GuildID].Speaking(false)
 
 	for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
 		done := make(chan error)
 		defer close(done)
 		db.StateCache[orgMsg.GuildID].Done = &done
-		db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
+		db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, session.VoiceConnections[orgMsg.GuildID], done)
 
 		err := <-done
+
+		_, exists := db.StateCache[orgMsg.GuildID]
+		if !exists {
+			return nil
+		}
 		db.StateCache[orgMsg.GuildID].Stream = nil
 		db.StateCache[orgMsg.GuildID].Done = nil
 
@@ -167,6 +172,15 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 		}
 	}
 	return dca.ErrVoiceConnClosed
+}
+
+func VoiceDisconnect(connection *discordgo.VoiceConnection) error {
+	if db.StateCache[connection.GuildID].Stream != nil {
+		db.StateCache[connection.GuildID].Stream.SetPaused(true)
+		*db.StateCache[connection.GuildID].Done <- io.EOF
+		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
+	}
+	return connection.Disconnect()
 }
 
 func CleanVoice() {

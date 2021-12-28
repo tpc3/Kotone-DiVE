@@ -22,14 +22,13 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 		}
 		for _, state := range guild.VoiceStates {
 			if state.UserID == orgMsg.Author.ID {
-				voice, err := session.ChannelVoiceJoin(orgMsg.GuildID, state.ChannelID, false, true)
+				_, err := session.ChannelVoiceJoin(orgMsg.GuildID, state.ChannelID, false, true)
 				if err != nil {
 					session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Failed))
 				}
 				db.StateCache[orgMsg.GuildID] = &db.GuildVCState{
-					Lock:       sync.Mutex{},
-					Channel:    orgMsg.ChannelID,
-					Connection: voice,
+					Lock:    sync.Mutex{},
+					Channel: orgMsg.ChannelID,
 				}
 				session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "🖐")
 				return

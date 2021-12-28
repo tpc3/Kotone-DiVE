@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/dca"
 	"github.com/patrickmn/go-cache"
 )
@@ -20,11 +19,10 @@ var (
 )
 
 type GuildVCState struct {
-	Lock       sync.Mutex
-	Channel    string
-	Connection *discordgo.VoiceConnection
-	Done       *chan error
-	Stream     *dca.StreamingSession
+	Lock    sync.Mutex
+	Channel string
+	Done    *chan error
+	Stream  *dca.StreamingSession
 }
 
 func init() {

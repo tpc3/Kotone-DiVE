@@ -6,7 +6,6 @@ import (
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
 	"Kotone-DiVE/lib/voices"
-	"io"
 	"log"
 	"runtime/debug"
 	"strings"
@@ -142,9 +141,9 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 			name = &strings.Split(orgMsg.Author.Username, "#")[0]
 		}
 		encodedName, err = voices.GetVoice(session, name, voice)
-	}
-	if err != nil {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		}
 	}
 	encodedContent, err = voices.GetVoice(session, &content, voice)
 	if err != nil {
@@ -156,7 +155,11 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	}
 
 	db.StateCache[orgMsg.GuildID].Lock.Lock()
-	defer db.StateCache[orgMsg.GuildID].Lock.Unlock()
+	defer func() {
+		if db.StateCache[orgMsg.GuildID] != nil {
+			db.StateCache[orgMsg.GuildID].Lock.Unlock()
+		}
+	}()
 
 	if guild.ReadName && encodedName != nil {
 		err = voices.ReadVoice(session, orgMsg, encodedName)
@@ -174,7 +177,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
-	selfState, exists := db.StateCache[state.GuildID]
+	_, exists := db.StateCache[state.GuildID]
 	if !exists {
 		return // Bot isn't connected
 	}
@@ -183,19 +186,30 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	if err != nil {
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
+
+	if state.UserID == session.State.User.ID {
+		if len(state.ChannelID) == 0 {
+			delete(db.StateCache, state.GuildID)
+			return
+		}
+		if state.BeforeUpdate.ChannelID != state.ChannelID {
+			_, err = session.ChannelVoiceJoin(state.GuildID, state.ChannelID, false, true)
+			if err != nil {
+				log.Print("WARN: VoiceStateUpdate failed to join:", err)
+			}
+		}
+	}
+
 	for _, userState := range guild.VoiceStates {
-		if selfState.Connection.ChannelID == userState.ChannelID && userState.UserID != session.State.User.ID {
-			alone = false
+		if userState.UserID != session.State.User.ID {
+			if session.VoiceConnections[state.GuildID].ChannelID == userState.ChannelID {
+				alone = false
+			}
 		}
 	}
 	if alone {
-		if db.StateCache[state.GuildID].Stream != nil {
-			db.StateCache[state.GuildID].Stream.SetPaused(true)
-			*db.StateCache[state.GuildID].Done <- io.EOF
-			time.Sleep(100 * time.Millisecond) // Super duper dirty hack
-		}
-		err := db.StateCache[state.GuildID].Connection.Disconnect()
-		delete(db.StateCache, state.GuildID)
+		err = voices.VoiceDisconnect(session.VoiceConnections[state.GuildID])
+
 		if err != nil {
 			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}
