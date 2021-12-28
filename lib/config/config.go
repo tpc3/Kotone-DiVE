@@ -15,6 +15,7 @@ type Config struct {
 	Discord struct {
 		Token  string
 		Status string
+		Retry  int
 	}
 	Db struct {
 		Kind string

@@ -144,18 +144,29 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 	db.StateCache[orgMsg.GuildID].Connection.Speaking(true)
 	defer db.StateCache[orgMsg.GuildID].Connection.Speaking(false)
 
-	done := make(chan error)
-	db.StateCache[orgMsg.GuildID].Done = &done
-	db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
+	for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
+		done := make(chan error)
+		defer close(done)
+		db.StateCache[orgMsg.GuildID].Done = &done
+		db.StateCache[orgMsg.GuildID].Stream = dca.NewStream(encoded, db.StateCache[orgMsg.GuildID].Connection, done)
 
-	err := <-done
-	if err != nil && err != io.EOF {
-		return err
+		err := <-done
+		db.StateCache[orgMsg.GuildID].Stream = nil
+		db.StateCache[orgMsg.GuildID].Done = nil
+
+		switch err {
+		case io.EOF:
+			fallthrough
+		case nil:
+			return nil
+		case dca.ErrVoiceConnClosed:
+			time.Sleep(time.Second)
+			continue
+		default:
+			return err
+		}
 	}
-	db.StateCache[orgMsg.GuildID].Stream = nil
-	db.StateCache[orgMsg.GuildID].Done = nil
-	close(done)
-	return nil
+	return dca.ErrVoiceConnClosed
 }
 
 func CleanVoice() {

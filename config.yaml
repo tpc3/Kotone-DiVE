@@ -7,6 +7,7 @@ help: https://github.com/tpc3/Kotone-DiVE/wiki
 discord:
   token:
   status: "Kotone-DiVE is running! | .help"
+  retry: 10
 db:
   kind: bbolt
   path: bbolt.db
