@@ -189,8 +189,10 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 
 	if state.UserID == session.State.User.ID {
 		_, exists := session.VoiceConnections[state.GuildID]
-		if len(state.ChannelID) == 0 && !exists {
-			delete(db.StateCache, state.GuildID)
+		if len(state.ChannelID) == 0 {
+			if !exists {
+				delete(db.StateCache, state.GuildID)
+			}
 			return
 		}
 		if state.BeforeUpdate.ChannelID != state.ChannelID {
