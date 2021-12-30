@@ -181,14 +181,15 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	if !exists {
 		return // Bot isn't connected
 	}
-	alone := true
+
 	guild, err := session.State.Guild(state.GuildID)
 	if err != nil {
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
 
 	if state.UserID == session.State.User.ID {
-		if len(state.ChannelID) == 0 {
+		_, exists := session.VoiceConnections[state.GuildID]
+		if len(state.ChannelID) == 0 && !exists {
 			delete(db.StateCache, state.GuildID)
 			return
 		}
@@ -200,6 +201,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		}
 	}
 
+	alone := true
 	for _, userState := range guild.VoiceStates {
 		if userState.UserID != session.State.User.ID {
 			if session.VoiceConnections[state.GuildID].ChannelID == userState.ChannelID {
