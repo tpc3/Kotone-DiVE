@@ -181,41 +181,45 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	if !exists {
 		return // Bot isn't connected
 	}
+	vc, exists := session.VoiceConnections[state.GuildID]
 
 	guild, err := session.State.Guild(state.GuildID)
 	if err != nil {
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
 
-	if state.UserID == session.State.User.ID {
-		_, exists := session.VoiceConnections[state.GuildID]
-		if len(state.ChannelID) == 0 {
-			if !exists {
-				delete(db.StateCache, state.GuildID)
+	alone := true
+	me := false
+	for _, userState := range guild.VoiceStates {
+		if userState.UserID != session.State.User.ID {
+			if exists && vc.ChannelID == userState.ChannelID {
+				alone = false
 			}
-			return
+		} else {
+			me = true
 		}
-		if state.BeforeUpdate.ChannelID != state.ChannelID {
+	}
+	if !me {
+		if config.CurrentConfig.Debug {
+			log.Print("Me does not exists in voicestates, maybe disconnection?")
+		}
+		delete(db.StateCache, state.GuildID)
+		return
+	}
+	if alone {
+		err = voices.VoiceDisconnect(vc)
+		if err != nil {
+			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
+		}
+
+	}
+
+	if state.UserID == session.State.User.ID {
+		if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID != state.ChannelID && me && !alone {
 			_, err = session.ChannelVoiceJoin(state.GuildID, state.ChannelID, false, true)
 			if err != nil {
 				log.Print("WARN: VoiceStateUpdate failed to join:", err)
 			}
-		}
-	}
-
-	alone := true
-	for _, userState := range guild.VoiceStates {
-		if userState.UserID != session.State.User.ID {
-			if session.VoiceConnections[state.GuildID].ChannelID == userState.ChannelID {
-				alone = false
-			}
-		}
-	}
-	if alone {
-		err = voices.VoiceDisconnect(session.VoiceConnections[state.GuildID])
-
-		if err != nil {
-			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}
 	}
 }
