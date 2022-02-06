@@ -14,7 +14,17 @@ const Leave = "leave"
 func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild *config.Guild) {
 	_, exists := db.StateCache[orgMsg.GuildID]
 	if exists {
-		err := voices.VoiceDisconnect(session.VoiceConnections[orgMsg.GuildID])
+		state, err := session.State.VoiceState(orgMsg.GuildID, session.State.User.ID)
+		if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+			return
+		}
+		if state == nil || state.ChannelID == "" {
+			// abnormal
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Leave.None))
+			return
+		}
+		err = voices.VoiceDisconnect(session, &orgMsg.GuildID, &state.ChannelID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return

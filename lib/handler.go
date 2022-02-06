@@ -177,6 +177,13 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 }
 
 func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpdate) {
+	if config.CurrentConfig.Debug {
+		before := " ChannelBefore="
+		if state.BeforeUpdate != nil {
+			before += state.BeforeUpdate.ChannelID
+		}
+		log.Print("VoiceStateUpdate: UserID=" + state.UserID + before + " ChannelAfter=" + state.ChannelID)
+	}
 	_, exists := db.StateCache[state.GuildID]
 	if !exists {
 		return // Bot isn't connected
@@ -201,25 +208,34 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	}
 	if !me {
 		if config.CurrentConfig.Debug {
-			log.Print("Me does not exists in voicestates, maybe disconnection?")
+			log.Print("I'm not exist in voicestates, maybe disconnection?")
+		}
+		if db.StateCache[state.GuildID].ReconnectionDetected {
+			log.Print("WARN: Will ignore this event due to detection")
+			db.StateCache[state.GuildID].ReconnectionDetected = false
+			return
 		}
 		delete(db.StateCache, state.GuildID)
 		return
 	}
 	if alone {
-		err = voices.VoiceDisconnect(vc)
+		err = voices.VoiceDisconnect(session, &guild.ID, &state.ChannelID)
 		if err != nil {
 			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}
-
+		return
 	}
 
 	if state.UserID == session.State.User.ID {
-		if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID != state.ChannelID && me && !alone {
+		if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID != state.ChannelID {
 			_, err = session.ChannelVoiceJoin(state.GuildID, state.ChannelID, false, true)
 			if err != nil {
 				log.Print("WARN: VoiceStateUpdate failed to join:", err)
 			}
+		}
+		if state.BeforeUpdate.ChannelID == state.ChannelID {
+			log.Print("WARN: VoiceStateUpdate detected reconection.")
+			db.StateCache[state.GuildID].ReconnectionDetected = true
 		}
 	}
 }

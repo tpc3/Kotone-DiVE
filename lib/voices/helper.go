@@ -141,6 +141,10 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 
 func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, encoded *dca.Decoder) error {
 
+	if session.VoiceConnections[orgMsg.GuildID] == nil {
+		return Skipped //Skipped due to the disconnection
+	}
+
 	session.VoiceConnections[orgMsg.GuildID].Speaking(true)
 	defer session.VoiceConnections[orgMsg.GuildID].Speaking(false)
 
@@ -174,13 +178,25 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 	return dca.ErrVoiceConnClosed
 }
 
-func VoiceDisconnect(connection *discordgo.VoiceConnection) error {
-	if db.StateCache[connection.GuildID].Stream != nil {
-		db.StateCache[connection.GuildID].Stream.SetPaused(true)
-		*db.StateCache[connection.GuildID].Done <- io.EOF
+func VoiceDisconnect(session *discordgo.Session, guildID *string, channelID *string) error {
+	var (
+		conn *discordgo.VoiceConnection
+		err  error
+	)
+	if session.VoiceConnections[*guildID] == nil {
+		conn, err = session.ChannelVoiceJoin(*guildID, *channelID, true, true)
+		if err != nil {
+			return err
+		}
+	} else {
+		conn = session.VoiceConnections[*guildID]
+	}
+	if db.StateCache[conn.GuildID].Stream != nil {
+		db.StateCache[conn.GuildID].Stream.SetPaused(true)
+		*db.StateCache[conn.GuildID].Done <- io.EOF
 		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
 	}
-	return connection.Disconnect()
+	return conn.Disconnect()
 }
 
 func CleanVoice() {

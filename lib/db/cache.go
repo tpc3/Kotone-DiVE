@@ -19,10 +19,11 @@ var (
 )
 
 type GuildVCState struct {
-	Lock    sync.Mutex
-	Channel string
-	Done    *chan error
-	Stream  *dca.StreamingSession
+	Lock                 sync.Mutex
+	Channel              string
+	Done                 *chan error
+	Stream               *dca.StreamingSession
+	ReconnectionDetected bool
 }
 
 func init() {
