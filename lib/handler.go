@@ -182,7 +182,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		if state.BeforeUpdate != nil {
 			before += state.BeforeUpdate.ChannelID
 		}
-		log.Print("VoiceStateUpdate: UserID=" + state.UserID + before + " ChannelAfter=" + state.ChannelID)
+		log.Print("VoiceStateUpdate: UserID=" + state.UserID + before + " ChannelAfter=" + state.ChannelID + " SessionID=" + state.SessionID)
 	}
 	_, exists := db.StateCache[state.GuildID]
 	if !exists {
@@ -233,7 +233,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 				log.Print("WARN: VoiceStateUpdate failed to join:", err)
 			}
 		}
-		if state.BeforeUpdate.ChannelID == state.ChannelID {
+		if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
 			log.Print("WARN: VoiceStateUpdate detected reconection.")
 			db.StateCache[state.GuildID].ReconnectionDetected = true
 		}
