@@ -226,7 +226,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		return
 	}
 
-	if state.UserID == session.State.User.ID {
+	if state.UserID == session.State.User.ID && state.BeforeUpdate != nil {
 		if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID != state.ChannelID {
 			_, err = session.ChannelVoiceJoin(state.GuildID, state.ChannelID, false, true)
 			if err != nil {
