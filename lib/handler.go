@@ -198,18 +198,8 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		log.Print("WARN: VoiceStateUpdate failed:", err)
 	}
 
-	alone := true
-	me := false
-	for _, userState := range guild.VoiceStates {
-		if userState.UserID != session.State.User.ID {
-			if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID == userState.ChannelID {
-				alone = false
-			}
-		} else {
-			me = true
-		}
-	}
-	if !me {
+	myState, _ := session.State.VoiceState(state.GuildID, session.State.User.ID)
+	if myState == nil {
 		if db.StateCache[state.GuildID].ReconnectionDetected {
 			log.Print("WARN: Will ignore this event due to detection")
 			db.StateCache[state.GuildID].ReconnectionDetected = false
@@ -221,6 +211,17 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		delete(db.StateCache, state.GuildID)
 		return
 	}
+
+	alone := true
+	for _, userState := range guild.VoiceStates {
+		log.Print(userState)
+		if userState.UserID != session.State.User.ID {
+			if myState.ChannelID == userState.ChannelID {
+				alone = false
+			}
+		}
+	}
+
 	if alone {
 		err = voices.VoiceDisconnect(session, &guild.ID)
 		if err != nil {
