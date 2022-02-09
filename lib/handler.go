@@ -188,7 +188,10 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	if !exists {
 		return // Bot isn't connected
 	}
-	vc, exists := session.VoiceConnections[state.GuildID]
+	if db.StateCache[state.GuildID].ManualReconnectionOngoing {
+		return
+	}
+	_, exists = session.VoiceConnections[state.GuildID]
 
 	guild, err := session.State.Guild(state.GuildID)
 	if err != nil {
@@ -199,7 +202,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	me := false
 	for _, userState := range guild.VoiceStates {
 		if userState.UserID != session.State.User.ID {
-			if exists && vc.ChannelID == userState.ChannelID {
+			if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID == userState.ChannelID {
 				alone = false
 			}
 		} else {
@@ -207,19 +210,19 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 		}
 	}
 	if !me {
-		if config.CurrentConfig.Debug {
-			log.Print("I'm not exist in voicestates, maybe disconnection?")
-		}
 		if db.StateCache[state.GuildID].ReconnectionDetected {
 			log.Print("WARN: Will ignore this event due to detection")
 			db.StateCache[state.GuildID].ReconnectionDetected = false
 			return
 		}
+		if config.CurrentConfig.Debug {
+			log.Print("I'm not exist in voicestates, maybe disconnection?")
+		}
 		delete(db.StateCache, state.GuildID)
 		return
 	}
 	if alone {
-		err = voices.VoiceDisconnect(session, &guild.ID, &state.ChannelID)
+		err = voices.VoiceDisconnect(session, &guild.ID)
 		if err != nil {
 			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}
@@ -227,15 +230,13 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	}
 
 	if state.UserID == session.State.User.ID && state.BeforeUpdate != nil {
-		if state.BeforeUpdate != nil && state.BeforeUpdate.ChannelID != state.ChannelID {
-			_, err = session.ChannelVoiceJoin(state.GuildID, state.ChannelID, false, true)
-			if err != nil {
-				log.Print("WARN: VoiceStateUpdate failed to join:", err)
+		if state.BeforeUpdate.ChannelID != state.ChannelID && !exists {
+			voices.VoiceReconnect(session, &state.GuildID, &state.ChannelID)
+		} else if !db.StateCache[state.GuildID].ManualReconnectionOngoing {
+			if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
+				log.Print("WARN: VoiceStateUpdate detected reconection.")
+				db.StateCache[state.GuildID].ReconnectionDetected = true
 			}
-		}
-		if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
-			log.Print("WARN: VoiceStateUpdate detected reconection.")
-			db.StateCache[state.GuildID].ReconnectionDetected = true
 		}
 	}
 }

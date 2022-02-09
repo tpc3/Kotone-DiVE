@@ -140,6 +140,20 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 }
 
 func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, encoded *dca.Decoder) error {
+	if db.StateCache[orgMsg.GuildID].ManualReconnectionOngoing {
+		for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
+			if config.CurrentConfig.Debug {
+				log.Print("Waiting for reconnection...")
+			}
+			time.Sleep(time.Second)
+		}
+	} else if session.VoiceConnections[orgMsg.GuildID] == nil {
+		state, err := session.State.VoiceState(orgMsg.GuildID, session.State.User.ID)
+		if err != nil {
+			return err
+		}
+		VoiceReconnect(session, &orgMsg.GuildID, &state.ChannelID)
+	}
 
 	if session.VoiceConnections[orgMsg.GuildID] == nil {
 		return Skipped //Skipped due to the disconnection
@@ -178,25 +192,33 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 	return dca.ErrVoiceConnClosed
 }
 
-func VoiceDisconnect(session *discordgo.Session, guildID *string, channelID *string) error {
-	var (
-		conn *discordgo.VoiceConnection
-		err  error
-	)
-	if session.VoiceConnections[*guildID] == nil {
-		conn, err = session.ChannelVoiceJoin(*guildID, *channelID, true, true)
-		if err != nil {
-			return err
-		}
-	} else {
-		conn = session.VoiceConnections[*guildID]
-	}
-	if db.StateCache[conn.GuildID].Stream != nil {
-		db.StateCache[conn.GuildID].Stream.SetPaused(true)
-		*db.StateCache[conn.GuildID].Done <- io.EOF
+func VoiceDisconnect(session *discordgo.Session, guildID *string) error {
+	if db.StateCache[*guildID].Stream != nil {
+		db.StateCache[*guildID].Stream.SetPaused(true)
+		*db.StateCache[*guildID].Done <- io.EOF
 		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
 	}
-	return conn.Disconnect()
+	return session.GuildMemberMove(*guildID, session.State.User.ID, nil)
+}
+
+func VoiceReconnect(session *discordgo.Session, guildID *string, channelID *string) {
+	if db.StateCache[*guildID].ManualReconnectionOngoing {
+		return
+	}
+	db.StateCache[*guildID].ManualReconnectionOngoing = true
+	if config.CurrentConfig.Debug {
+		log.Print("WARN: VoiceStateUpdate reconnecting to VC...")
+	}
+	for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
+		_, err := session.ChannelVoiceJoin(*guildID, *channelID, false, true)
+		if err != nil {
+			log.Print("WARN: VoiceStateUpdate failed to join, retrying...:", err)
+			session.GuildMemberMove(*guildID, session.State.User.ID, nil)
+		} else {
+			break
+		}
+	}
+	db.StateCache[*guildID].ManualReconnectionOngoing = false
 }
 
 func CleanVoice() {

@@ -24,7 +24,7 @@ func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Leave.None))
 			return
 		}
-		err = voices.VoiceDisconnect(session, &orgMsg.GuildID, &state.ChannelID)
+		err = voices.VoiceDisconnect(session, &orgMsg.GuildID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return
