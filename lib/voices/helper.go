@@ -62,6 +62,11 @@ func VerifyVoice(source *string, voice *string, voiceerror string) error {
 			return errors.New(voiceerror)
 		}
 		return VoiceTextVerify(voice)
+	case Voicevox:
+		if !config.CurrentConfig.Voices.Voicevox.Enabled {
+			return errors.New(voiceerror)
+		}
+		return VoicevoxVerify(voice)
 	default:
 		return errors.New(voiceerror)
 	}
@@ -102,6 +107,11 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 					return nil, errors.New("voice is not available:" + VoiceText)
 				}
 				bin, err = VoiceTextSynth(message, &voice.Type)
+			case Voicevox:
+				if !config.CurrentConfig.Voices.Voicevox.Enabled {
+					return nil, errors.New("voice is not available:" + Voicevox)
+				}
+				bin, err = VoicevoxSynth(message, &voice.Type)
 			default:
 				return nil, errors.New("No such voice source:" + voice.Source)
 			}

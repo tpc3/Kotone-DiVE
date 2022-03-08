@@ -44,6 +44,10 @@ type Config struct {
 			Enabled bool
 			Token   string
 		}
+		Voicevox struct {
+			Enabled bool
+			Api     string
+		}
 	}
 	Guild Guild
 	User  User
