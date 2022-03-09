@@ -63,9 +63,10 @@ func init() {
 func VoicevoxSynth(content *string, voice *string) (*[]byte, error) {
 	id := -1
 	for _, speaker := range vvSpeakers.Speakers {
-		for i, v := range speaker.Styles {
+		for _, v := range speaker.Styles {
 			if speaker.Name+v.Name == *voice {
-				id = i
+				id = v.Id
+				break
 			}
 		}
 	}
