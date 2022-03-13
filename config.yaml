@@ -29,6 +29,9 @@ voices:
   voicetext:
     enabled: false
     token:
+  voicevox:
+    enabled: false
+    api: 
 guild:
   prefix: .
   lang: japanese
