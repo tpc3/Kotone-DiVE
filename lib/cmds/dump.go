@@ -22,7 +22,7 @@ func DumpCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		str string
 		obj interface{}
 	)
-	if len(req) == 1 || req[1] != "user" {
+	if len(req) == 1 {
 		if len(req) == 1 || req[1] != "all" {
 			g := guild
 			g.PolicyList = nil
@@ -33,7 +33,16 @@ func DumpCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		}
 	} else {
 		var err error
-		obj, err = db.LoadUser(&orgMsg.Author.ID)
+		id := ""
+		if req[1] == "user" {
+			id = orgMsg.Author.ID
+		} else if strings.HasPrefix(req[1], "<@") && len(orgMsg.Mentions) == 1 {
+			id = orgMsg.Mentions[0].ID
+		} else {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
+			return
+		}
+		obj, err = db.LoadUser(&id)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 			return

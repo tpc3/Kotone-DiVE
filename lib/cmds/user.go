@@ -13,8 +13,32 @@ import (
 const User = "user"
 
 func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild config.Guild) {
-	parsed := strings.SplitN(orgMsg.Content, " ", 3)
-	user, err := db.LoadUser(&orgMsg.Author.ID)
+	parsed := strings.SplitN(orgMsg.Content, " ", 4)
+	p, err := session.State.MessagePermissions(orgMsg.Message)
+	if err != nil {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
+	}
+	admin := p&discordgo.PermissionAdministrator != 0
+	if len(parsed) < 2 {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
+		return
+	}
+	id := &orgMsg.Author.ID
+	if len(orgMsg.Mentions) != 0 {
+		if !admin {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Permission))
+			return
+		}
+		if !strings.HasPrefix(parsed[len(parsed)-1], "<@") {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
+			return
+		}
+		// change id, shrink parsed
+		id = &orgMsg.Mentions[0].ID
+		parsed = parsed[:len(parsed)-1]
+	}
+	user, err := db.LoadUser(id)
 	if err != nil {
 		user = config.User{
 			Voice: config.Voice{
@@ -24,10 +48,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 			Name: "",
 		}
 	}
-	if len(parsed) < 2 {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
-		return
-	}
+
 	switch parsed[1] {
 	case "voice":
 		if len(parsed) < 3 {
@@ -64,7 +85,7 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.SubCmd))
 		return
 	}
-	err = db.SaveUser(&orgMsg.Author.ID, &user)
+	err = db.SaveUser(id, &user)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}

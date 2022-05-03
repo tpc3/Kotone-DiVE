@@ -7,18 +7,19 @@ type Strings struct {
 }
 
 type errorstr struct {
-	Title     string
-	Unknown   string
-	SubCmd    string
-	Voice     string
-	Joinfirst string
-	Join      joinerrorstr
-	Leave     leaveerrorstr
-	Guild     guilderrorstr
-	Config    configerrorstr
-	Replace   replaceerrorstr
-	Policy    policyerrorstr
-	Skip      skiperrorstr
+	Title      string
+	Unknown    string
+	SubCmd     string
+	Voice      string
+	Joinfirst  string
+	Permission string
+	Join       joinerrorstr
+	Leave      leaveerrorstr
+	Guild      guilderrorstr
+	Config     configerrorstr
+	Replace    replaceerrorstr
+	Policy     policyerrorstr
+	Skip       skiperrorstr
 }
 
 type guilderrorstr struct {
@@ -67,11 +68,12 @@ func loadLang() {
 		Lang: "japanese",
 		Help: "Botの使い方に関しては、Wikiをご覧ください。",
 		Error: errorstr{
-			Title:     "エラー",
-			Unknown:   "不明なエラーが発生しました。\nこの問題は管理者に報告されます。",
-			SubCmd:    "サブコマンドが不正です。",
-			Voice:     "そのようなボイスは存在しません。",
-			Joinfirst: "まずはVCに参加してください。",
+			Title:      "エラー",
+			Unknown:    "不明なエラーが発生しました。\nこの問題は管理者に報告されます。",
+			SubCmd:     "サブコマンドが不正です。",
+			Voice:      "そのようなボイスは存在しません。",
+			Joinfirst:  "まずはVCに参加してください。",
+			Permission: "実行権限がありません。",
 			Join: joinerrorstr{
 				Already: "既にVCに接続済です。",
 				Failed:  "接続に失敗しました。権限設定をご確認ください。",
@@ -108,11 +110,12 @@ func loadLang() {
 
 		Help: "Usage is available on the Wiki.",
 		Error: errorstr{
-			Title:     "Error",
-			Unknown:   "Unknown Error!\nThis will be reported.",
-			SubCmd:    "Invalid subcommand.",
-			Voice:     "No such voice.",
-			Joinfirst: "You must join VC first",
+			Title:      "Error",
+			Unknown:    "Unknown Error!\nThis will be reported.",
+			SubCmd:     "Invalid subcommand.",
+			Voice:      "No such voice.",
+			Joinfirst:  "You must join VC first",
+			Permission: "You don't have permission to do that.",
 			Join: joinerrorstr{
 				Already: "I've already joined.",
 				Failed:  "Connection failed. please check your server permissions.",
