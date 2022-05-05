@@ -7,6 +7,9 @@ import (
 	"bytes"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/bwmarrin/discordgo"
 	"gopkg.in/yaml.v2"
 )
@@ -57,7 +60,7 @@ func DumpCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 		session.ChannelFileSend(orgMsg.ChannelID, Dump+"."+ext, bytes.NewReader(result))
 	} else {
 		msg := embed.NewEmbed(session, orgMsg)
-		msg.Title = strings.Title(Dump)
+		msg.Title = cases.Title(language.Und, cases.NoLower).String(Dump)
 		msg.Description = str
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 	}

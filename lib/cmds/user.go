@@ -13,7 +13,7 @@ import (
 const User = "user"
 
 func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild config.Guild) {
-	parsed := strings.SplitN(orgMsg.Content, " ", 4)
+	parsed := strings.Split(orgMsg.Content, " ")
 	p, err := session.State.MessagePermissions(orgMsg.Message)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
@@ -51,24 +51,19 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 
 	switch parsed[1] {
 	case "voice":
-		if len(parsed) < 3 {
+		if len(parsed) != 4 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}
-		options := strings.SplitN(parsed[2], " ", 2)
-		if len(options) != 2 {
-			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
-			return
-		}
-		err := voices.VerifyVoice(&options[0], &options[1], config.Lang[guild.Lang].Error.Voice)
+		err := voices.VerifyVoice(&parsed[2], &parsed[3], config.Lang[guild.Lang].Error.Voice)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+err.Error()))
 			return
 		}
-		user.Voice.Source = options[0]
-		user.Voice.Type = options[1]
+		user.Voice.Source = parsed[2]
+		user.Voice.Type = parsed[3]
 	case "name":
-		if len(parsed) < 3 {
+		if len(parsed) != 3 {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}

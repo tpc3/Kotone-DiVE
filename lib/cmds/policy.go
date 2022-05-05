@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const Policy = "policy"
@@ -59,7 +61,7 @@ func PolicyCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guil
 			session.ChannelFileSend(orgMsg.ChannelID, "list.txt", strings.NewReader(text))
 		} else {
 			msg := embed.NewEmbed(session, orgMsg)
-			msg.Title = strings.Title(Policy)
+			msg.Title = cases.Title(language.Und, cases.NoLower).String(Policy)
 			msg.Description = desc
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 		}

@@ -11,6 +11,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	shellquote "github.com/kballard/go-shellquote"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const Replace = "replace"
@@ -96,7 +98,7 @@ func ReplaceCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 			session.ChannelFileSend(orgMsg.ChannelID, "list.txt", strings.NewReader(text))
 		} else {
 			msg := embed.NewEmbed(session, orgMsg)
-			msg.Title = strings.Title(Replace)
+			msg.Title = cases.Title(language.Und, cases.NoLower).String(Replace)
 			msg.Description = desc
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, msg)
 		}

@@ -5,9 +5,10 @@ import (
 	"Kotone-DiVE/lib/embed"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const Ping = "ping"
@@ -15,7 +16,7 @@ const Ping = "ping"
 func PingCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
 	msg := embed.NewEmbed(session, orgMsg)
 	msg.Color = embed.ColorBlue
-	msg.Title = strings.Title(Ping)
+	msg.Title = cases.Title(language.Und, cases.NoLower).String(Ping)
 	msg.Description = "Pong!"
 	msg.Fields = append(msg.Fields, &discordgo.MessageEmbedField{
 		Name:  "Golang",
