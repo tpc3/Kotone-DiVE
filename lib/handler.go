@@ -85,23 +85,25 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
-	if err == discordgo.ErrStateNotFound {
-		return
-	} else if err != nil {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
-		return
-	}
-	mystate, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
-	if err == discordgo.ErrStateNotFound {
-		return // ?????
-	} else if err != nil {
-		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
-		return
-	}
+	if !guild.ReadAllUsers {
+		state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
+		if err == discordgo.ErrStateNotFound {
+			return
+		} else if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+			return
+		}
+		mystate, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
+		if err == discordgo.ErrStateNotFound {
+			return // ?????
+		} else if err != nil {
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+			return
+		}
 
-	if state.ChannelID != mystate.ChannelID {
-		return
+		if state.ChannelID != mystate.ChannelID {
+			return
+		}
 	}
 
 	switch guild.Policy {
