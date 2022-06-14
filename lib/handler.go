@@ -85,9 +85,22 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	content, err := orgMsg.ContentWithMoreMentionsReplaced(session)
-	if err != nil {
+	state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
+	if err == discordgo.ErrStateNotFound {
+		return
+	} else if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
+	}
+	mystate, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
+	if err == discordgo.ErrStateNotFound {
+		return // ?????
+	} else if err != nil {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
+	}
+
+	if state.ChannelID != mystate.ChannelID {
 		return
 	}
 
@@ -117,6 +130,12 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		voice = &guild.Voice
 	} else {
 		voice = &user.Voice
+	}
+
+	content, err := orgMsg.ContentWithMoreMentionsReplaced(session)
+	if err != nil {
+		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
+		return
 	}
 
 	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)

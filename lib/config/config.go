@@ -54,15 +54,16 @@ type Config struct {
 }
 
 type Guild struct {
-	Prefix     string
-	Lang       string
-	MaxChar    int
-	Voice      Voice
-	ReadBots   bool
-	ReadName   bool
-	Policy     string
-	PolicyList map[string]string
-	Replace    map[string]string
+	Prefix       string
+	Lang         string
+	MaxChar      int
+	Voice        Voice
+	ReadBots     bool
+	ReadName     bool
+	ReadAllUsers bool
+	Policy       string
+	PolicyList   map[string]string
+	Replace      map[string]string
 }
 type User struct {
 	Voice Voice
