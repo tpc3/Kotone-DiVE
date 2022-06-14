@@ -85,7 +85,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	if !guild.ReadAllUsers {
+	if !guild.ReadAllUsers && !orgMsg.Author.Bot {
 		state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
 		if err == discordgo.ErrStateNotFound {
 			return
@@ -93,7 +93,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return
 		}
-		mystate, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
+		mystate, err := session.State.VoiceState(orgMsg.GuildID, session.State.User.ID)
 		if err == discordgo.ErrStateNotFound {
 			return // ?????
 		} else if err != nil {
