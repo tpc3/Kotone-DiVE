@@ -7,12 +7,12 @@ require github.com/bwmarrin/discordgo v0.25.0
 require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	go.etcd.io/bbolt v1.3.6
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 )
 
 require (
 	github.com/jonas747/dca v0.0.0-20210930103944-155f5e5f0cc7
-	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
+	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -28,8 +28,8 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.102.0 // indirect
-	github.com/IBM/go-sdk-core/v5 v5.10.1
+	cloud.google.com/go v0.103.0 // indirect
+	github.com/IBM/go-sdk-core/v5 v5.10.2
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
@@ -37,14 +37,14 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/watson-developer-cloud/go-sdk/v2 v2.2.0
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/net v0.0.0-20220630215102-69896b714898 // indirect
-	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0 // indirect
+	golang.org/x/net v0.0.0-20220728211354-c7608f3a8462 // indirect
+	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c // indirect
 	golang.org/x/text v0.3.7
-	google.golang.org/api v0.86.0
+	google.golang.org/api v0.90.0
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7
-	google.golang.org/grpc v1.47.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/genproto v0.0.0-20220801145646-83ce21fca29f
+	google.golang.org/grpc v1.48.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 )
 
 require (
@@ -54,10 +54,10 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cncf/udpa/go v0.0.0-20220112060539-c52dc94e7fbe // indirect
 	github.com/cncf/xds/go v0.0.0-20220520190051-1e77728a1eaa // indirect
-	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1 // indirect
+	github.com/envoyproxy/go-control-plane v0.10.3 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.7 // indirect
 	github.com/go-openapi/errors v0.20.2 // indirect
-	github.com/go-openapi/strfmt v0.21.2 // indirect
+	github.com/go-openapi/strfmt v0.21.3 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
@@ -67,10 +67,10 @@ require (
 	github.com/lyft/protoc-gen-star v0.6.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/spf13/afero v1.6.0 // indirect
-	go.mongodb.org/mongo-driver v1.9.1 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
+	go.mongodb.org/mongo-driver v1.10.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/mod v0.5.0 // indirect
-	golang.org/x/tools v0.1.5 // indirect
+	golang.org/x/mod v0.5.1 // indirect
+	golang.org/x/tools v0.1.9 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 )
