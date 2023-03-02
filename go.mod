@@ -24,7 +24,6 @@ require (
 	github.com/jonas747/ogg v0.0.0-20161220051205-b4f6f4cf3757 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 )
 
 require (
