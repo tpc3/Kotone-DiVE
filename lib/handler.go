@@ -235,7 +235,9 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 
 	alone := true
 	for _, userState := range guild.VoiceStates {
-		log.Print(userState)
+		if config.CurrentConfig.Debug {
+			log.Print(userState)
+		}
 		if userState.UserID != session.State.User.ID {
 			if myState.ChannelID == userState.ChannelID {
 				alone = false
