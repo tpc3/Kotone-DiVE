@@ -48,6 +48,10 @@ type Config struct {
 			Enabled bool
 			Api     string
 		}
+		Coeiroink struct {
+			Enabled bool
+			Api     string
+		}
 	}
 	Guild Guild
 	User  User
@@ -105,7 +109,7 @@ func init() {
 	}
 }
 
-//You should call voices.Verify before running this!
+// You should call voices.Verify before running this!
 func VerifyGuild(guild *Guild) error {
 	val, exists := Lang[guild.Lang]
 	if !exists {

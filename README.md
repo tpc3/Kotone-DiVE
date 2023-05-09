@@ -14,7 +14,7 @@ Suitable for self-host usage.
   * We don't check it, but other every platform golang supports should run it.
 * Discord bot account
 * Token of your favorite TTS provider
-  * Currently supports: `azure`, `gcp`, `gtts`(for testing), `voicetext`, `voicevox`, `watson`
+  * Currently supports: `azure`, `gcp`, `gtts`(for testing), `voicetext`, `voicevox`, `watson`, `coeiroink`
   * Every single voice type of the provider should work.
 
 ## How-to

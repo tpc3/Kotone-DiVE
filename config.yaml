@@ -32,11 +32,14 @@ voices:
   voicevox:
     enabled: false
     api: 
+  coeiroink:
+    enabled: true
+    api: http://localhost:50031
 guild:
   prefix: .
   lang: japanese
   maxchar: 100
-  voice: # Values under this section are not verified before running! Be careful
+  voice: # Values under this section are not verified at runtime! Be careful
     source: gtts
     type: ja
   readbots: false
