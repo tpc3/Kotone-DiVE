@@ -6,7 +6,7 @@ ENV CGO_ENABLED 0
 WORKDIR /go/src/Kotone-DiVE
 RUN go build .
 
-FROM alpine
+FROM alpine:3.17
 COPY --from=build /go/src/Kotone-DiVE/Kotone-DiVE /go/src/Kotone-DiVE/config.yaml /Kotone-DiVE/
 RUN apk add --no-cache ca-certificates ffmpeg
 WORKDIR /Kotone-DiVE
