@@ -52,6 +52,10 @@ type Config struct {
 			Enabled bool
 			Api     string
 		}
+		AquestalkProxy struct {
+			Enabled bool
+			Api     string
+		}
 	}
 	Guild Guild
 	User  User

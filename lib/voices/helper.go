@@ -72,6 +72,11 @@ func VerifyVoice(source *string, voice *string, voiceerror string) error {
 			return errors.New(voiceerror)
 		}
 		return CoeiroinkVerify(voice)
+	case AquestalkProxy:
+		if !config.CurrentConfig.Voices.AquestalkProxy.Enabled {
+			return errors.New(voiceerror)
+		}
+		return AquestalkProxyVerify(voice)
 	default:
 		return errors.New(voiceerror)
 	}
@@ -122,6 +127,12 @@ func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) 
 					return nil, errors.New("voice is not available:" + Coeiroink)
 				}
 				bin, err = CoeiroinkSynth(message, &voice.Type)
+			case AquestalkProxy:
+				if !config.CurrentConfig.Voices.AquestalkProxy.Enabled {
+					return nil, errors.New("voice is not available:" + AquestalkProxy)
+				}
+				bin, err = AquestalkProxySynth(message, &voice.Type)
+
 			default:
 				return nil, errors.New("No such voice source:" + voice.Source)
 			}
