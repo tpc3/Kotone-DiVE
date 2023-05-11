@@ -16,7 +16,7 @@ const (
 )
 
 type AquestalkProxyRequest struct {
-	VoiceType string `json:"voice_type"`
+	VoiceType string `json:"type"`
 	Speed     int    `json:"speed"`
 	Koe       string `json:"koe"`
 }
