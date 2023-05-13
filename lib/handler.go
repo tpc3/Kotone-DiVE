@@ -141,6 +141,10 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	}
 
 	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
+	if len(strings.TrimSpace(*replaced)) == 0 {
+		return
+	}
+
 	runeContent := []rune(*replaced)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])

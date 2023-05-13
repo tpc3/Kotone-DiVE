@@ -19,5 +19,5 @@ func DebugCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 		str = parsed[1]
 	}
 	_, trace := voices.Replace(&orgMsg.GuildID, &guild.Replace, str, true)
-	session.ChannelFileSendWithMessage(orgMsg.ChannelID, "WARNING: Avoid using this future as much as you can.\n This will ruin the performance!", "debug.log", strings.NewReader(*trace))
+	session.ChannelFileSendWithMessage(orgMsg.ChannelID, "Debugging replace engine.", "debug.log", strings.NewReader(*trace))
 }
