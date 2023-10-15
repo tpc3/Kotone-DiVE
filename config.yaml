@@ -34,7 +34,7 @@ voices:
     api: 
   coeiroink:
     enabled: true
-    api: http://localhost:50031
+    api:
 guild:
   prefix: .
   lang: japanese
