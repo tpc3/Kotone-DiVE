@@ -10,7 +10,10 @@ import (
 
 type Config struct {
 	Debug   bool
-	Replace map[string]string `yaml:",flow"`
+	Replace struct {
+		Before map[string]string `yaml:",flow"`
+		After  map[string]string `yaml:",flow"`
+	}
 	Help    string
 	Discord struct {
 		Token  string
