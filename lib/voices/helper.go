@@ -19,18 +19,23 @@ import (
 )
 
 var (
-	Voices      []string
-	configRegex map[*regexp.Regexp]string
-	httpCli     *http.Client
-	Skipped     error
+	Voices            []string
+	configRegexBefore map[*regexp.Regexp]string
+	configRegexAfter  map[*regexp.Regexp]string
+	httpCli           *http.Client
+	Skipped           error
 )
 
 func init() {
 	Voices = []string{Watson, Gtts}
 	httpCli = &http.Client{}
-	configRegex = map[*regexp.Regexp]string{}
-	for k, v := range config.CurrentConfig.Replace {
-		configRegex[regexp.MustCompile(k)] = v
+	configRegexBefore = map[*regexp.Regexp]string{}
+	for k, v := range config.CurrentConfig.Replace.Before {
+		configRegexBefore[regexp.MustCompile(k)] = v
+	}
+	configRegexAfter = map[*regexp.Regexp]string{}
+	for k, v := range config.CurrentConfig.Replace.After {
+		configRegexAfter[regexp.MustCompile(k)] = v
 	}
 	Skipped = errors.New("skipped")
 }
@@ -266,6 +271,20 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 		start = time.Now()
 		logStr = "Regex Replace() trace started at " + start.String() + " with string \"" + content + "\".\nGuildId is: " + *id + ".\n"
 	}
+
+	for k, v := range configRegexBefore {
+		if trace {
+			oldStr = content
+		}
+		content = k.ReplaceAllString(content, v)
+		if trace && content != oldStr {
+			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: " + content + "\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
+		}
+	}
+	if trace {
+		logStr += "Processed config before regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
+	}
+
 	val, exists := db.RegexCache[*id]
 	compiled := map[*regexp.Regexp]*string{}
 	if exists {
@@ -316,7 +335,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 		logStr += "Processed user regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
 	}
 
-	for k, v := range configRegex {
+	for k, v := range configRegexAfter {
 		if trace {
 			oldStr = content
 		}
@@ -326,7 +345,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 		}
 	}
 	if trace {
-		logStr += "Processed config regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\nReplace() ended at " + time.Now().String() + " with string \"" + content + "\".\n"
+		logStr += "Processed config after regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\nReplace() ended at " + time.Now().String() + " with string \"" + content + "\".\n"
 	}
 	return &content, &logStr
 }
