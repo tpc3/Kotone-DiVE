@@ -21,7 +21,7 @@ Suitable for self-host usage.
 
 ### Configure
 
-1. [Download config](https://raw.githubusercontent.com/tpc3/Kotone-DiVE/master/config-template.yaml) and rename to `config.yaml`
+1. [Download config](https://raw.githubusercontent.com/tpc3/Kotone-DiVE/master/config.yaml)
 1. Edit the config file
     * Enter your bot token
     * Enable your TTS provider(s)
