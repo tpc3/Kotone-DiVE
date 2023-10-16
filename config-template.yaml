@@ -1,8 +1,10 @@
 debug: true
-replace: 
-  "https?://[\\w+.:?#[\\]@!$&'()~*,;=/%-]+": "URL"
-  "<a?:.*?:.*?>": ""
-  "\\|\\|[\\s\\S]*?\\|\\|": ""
+replace:
+  before:
+    "https?://[\\w+.:?#[\\]@!$&'()~*,;=/%-]+": "URL"
+  after:
+    "<a?:.*?:.*?>": ""
+    "\\|\\|[\\s\\S]*?\\|\\|": ""
 help: https://github.com/tpc3/Kotone-DiVE/wiki
 discord:
   token:
