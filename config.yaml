@@ -35,9 +35,6 @@ voices:
   coeiroink:
     enabled: false
     api:
-  aquestalkproxy:
-    enabled: false
-    api:
 guild:
   prefix: .
   lang: japanese
