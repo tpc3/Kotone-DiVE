@@ -5,6 +5,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
+	"Kotone-DiVE/lib/utils"
 	"Kotone-DiVE/lib/voices"
 	"log"
 	"runtime/debug"
@@ -140,7 +141,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	replaced, _ := voices.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
+	replaced, _ := utils.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
 	if len(strings.TrimSpace(*replaced)) == 0 {
 		return
 	}
@@ -165,12 +166,12 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		} else {
 			name = &strings.Split(orgMsg.Author.Username, "#")[0]
 		}
-		encodedName, err = voices.GetVoice(session, name, voice)
+		encodedName, err = voices.GetVoice(name, voice)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		}
 	}
-	encodedContent, err = voices.GetVoice(session, &content, voice)
+	encodedContent, err = voices.GetVoice(&content, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		return

@@ -55,9 +55,9 @@ func UserCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild 
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value))
 			return
 		}
-		err := voices.VerifyVoice(&parsed[2], &parsed[3], config.Lang[guild.Lang].Error.Voice)
+		err := voices.VerifyVoice(&parsed[2], parsed[3])
 		if err != nil {
-			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+err.Error()))
+			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Config.Value+": "+config.Lang[guild.Lang].Error.Voice))
 			return
 		}
 		user.Voice.Source = parsed[2]

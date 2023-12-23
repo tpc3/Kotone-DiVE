@@ -12,14 +12,15 @@ import (
 	"strconv"
 )
 
-const (
-	Coeiroink = "coeiroink"
+var (
+	Coeiroink coeiroink
 )
 
-var (
-	ciSpeakers         Speakers
-	ciSynthesisRequest *http.Request
-)
+type coeiroink struct {
+	Info     VoiceInfo
+	Speakers Speakers
+	Request  *http.Request
+}
 
 // These structs are currently used from voicevox implementation
 // type Speakers struct
@@ -30,6 +31,15 @@ var (
 // They uses almost identical api, but requires windows or mac to run. (OSs like Linux requires additional compat layers like wine)
 
 func init() {
+	Coeiroink = coeiroink{
+		Info: VoiceInfo{
+			Type:             "coeiroink",
+			Format:           "pcm",
+			Container:        "wav",
+			ReEncodeRequired: true,
+			Enabled:          config.CurrentConfig.Voices.Coeiroink.Enabled,
+		},
+	}
 	if !config.CurrentConfig.Voices.Coeiroink.Enabled {
 		log.Print("WARN: Coeiroink is disabled")
 		return
@@ -43,19 +53,20 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = json.Unmarshal([]byte("{ \"speakers\": "+string(bin)+" }"), &ciSpeakers)
+	err = json.Unmarshal([]byte("{ \"speakers\": "+string(bin)+" }"), &Coeiroink.Speakers)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ciSynthesisRequest, err = http.NewRequest(http.MethodPost, config.CurrentConfig.Voices.Coeiroink.Api+"/synthesis", nil)
+	request, err := http.NewRequest(http.MethodPost, config.CurrentConfig.Voices.Coeiroink.Api+"/synthesis", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+	Coeiroink.Request = request
 }
 
-func CoeiroinkSynth(content *string, voice *string) (*[]byte, error) {
+func (voiceSource coeiroink) Synth(content string, voice *string) (*[]byte, error) {
 	id := -1
-	for _, speaker := range ciSpeakers.Speakers {
+	for _, speaker := range voiceSource.Speakers.Speakers {
 		for _, v := range speaker.Styles {
 			if speaker.Name+v.Name == *voice {
 				id = v.Id
@@ -68,7 +79,7 @@ func CoeiroinkSynth(content *string, voice *string) (*[]byte, error) {
 	}
 
 	// copy
-	res, err := http.Post(config.CurrentConfig.Voices.Coeiroink.Api+"/audio_query?speaker="+strconv.Itoa(id)+"&text="+url.QueryEscape(*content), "", nil)
+	res, err := http.Post(config.CurrentConfig.Voices.Coeiroink.Api+"/audio_query?speaker="+strconv.Itoa(id)+"&text="+url.QueryEscape(content), "", nil)
 
 	if err != nil {
 		return nil, err
@@ -79,17 +90,17 @@ func CoeiroinkSynth(content *string, voice *string) (*[]byte, error) {
 	}
 
 	// copy
-	req := *ciSynthesisRequest
+	req := *voiceSource.Request
 
 	query := res.Body
 	buf := new(bytes.Buffer)
-	len, err := buf.ReadFrom(query)
+	length, err := buf.ReadFrom(query)
 	if err != nil {
 		return nil, err
 	}
 	req.URL.RawQuery = "speaker=" + strconv.Itoa(id)
 	req.Body = io.NopCloser(buf)
-	req.ContentLength = len
+	req.ContentLength = length
 	req.GetBody = func() (io.ReadCloser, error) { return req.Body, nil }
 	req.Header.Set("Content-Type", "application/json")
 
@@ -109,13 +120,17 @@ func CoeiroinkSynth(content *string, voice *string) (*[]byte, error) {
 	return &bin, nil
 }
 
-func CoeiroinkVerify(voice *string) error {
-	for _, speaker := range ciSpeakers.Speakers {
+func (voiceSource coeiroink) Verify(voice string) error {
+	for _, speaker := range voiceSource.Speakers.Speakers {
 		for _, v := range speaker.Styles {
-			if speaker.Name+v.Name == *voice {
+			if speaker.Name+v.Name == voice {
 				return nil
 			}
 		}
 	}
 	return errors.New("no such voice")
+}
+
+func (voiceSource coeiroink) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

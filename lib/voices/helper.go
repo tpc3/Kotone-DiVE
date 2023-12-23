@@ -19,15 +19,29 @@ import (
 )
 
 var (
-	Voices            []string
 	configRegexBefore map[*regexp.Regexp]string
 	configRegexAfter  map[*regexp.Regexp]string
 	httpCli           *http.Client
 	Skipped           error
+	SourceDisabled    error
+	NoSuchSource      error
 )
 
+type VoiceSource interface {
+	Verify(voice string) error
+	Synth(content string, voice *string) (*[]byte, error)
+	GetInfo() VoiceInfo
+}
+
+type VoiceInfo struct {
+	Type             string
+	Format           string
+	Container        string
+	ReEncodeRequired bool
+	Enabled          bool
+}
+
 func init() {
-	Voices = []string{Watson, Gtts}
 	httpCli = &http.Client{}
 	configRegexBefore = map[*regexp.Regexp]string{}
 	for k, v := range config.CurrentConfig.Replace.Before {
@@ -38,109 +52,58 @@ func init() {
 		configRegexAfter[regexp.MustCompile(k)] = v
 	}
 	Skipped = errors.New("skipped")
+	SourceDisabled = errors.New("voice source is disabled")
+	NoSuchSource = errors.New("no such voice source")
 }
 
-func VerifyVoice(source *string, voice *string, voiceerror string) error {
+func SourceSwitcher(source *string) (VoiceSource, error) {
+	log.Print(*source)
+	var voiceSource VoiceSource
 	switch *source {
-	case Watson:
-		if !config.CurrentConfig.Voices.Watson.Enabled {
-			return errors.New(voiceerror)
-		}
-		return WatsonVerify(voice)
-	case Gtts:
-		if !config.CurrentConfig.Voices.Gtts.Enabled {
-			return errors.New(voiceerror)
-		}
-		return GttsVerify(voice)
-	case Gcp:
-		if !config.CurrentConfig.Voices.Gcp.Enabled {
-			return errors.New(voiceerror)
-		}
-		return GcpVerify(voice)
-	case Azure:
-		if !config.CurrentConfig.Voices.Azure.Enabled {
-			return errors.New(voiceerror)
-		}
-		return AzureVerify(voice)
-	case VoiceText:
-		if !config.CurrentConfig.Voices.VoiceText.Enabled {
-			return errors.New(voiceerror)
-		}
-		return VoiceTextVerify(voice)
-	case Voicevox:
-		if !config.CurrentConfig.Voices.Voicevox.Enabled {
-			return errors.New(voiceerror)
-		}
-		return VoicevoxVerify(voice)
-	case Coeiroink:
-		if !config.CurrentConfig.Voices.Coeiroink.Enabled {
-			return errors.New(voiceerror)
-		}
-		return CoeiroinkVerify(voice)
-	case AquestalkProxy:
-		if !config.CurrentConfig.Voices.AquestalkProxy.Enabled {
-			return errors.New(voiceerror)
-		}
-		return AquestalkProxyVerify(voice)
+	case Watson.Info.Type:
+		voiceSource = Watson
+	case Gtts.Info.Type:
+		voiceSource = Gtts
+	case Gcp.Info.Type:
+		voiceSource = Gcp
+	case Azure.Info.Type:
+		voiceSource = Azure
+	case VoiceText.Info.Type:
+		voiceSource = VoiceText
+	case Voicevox.Info.Type:
+		voiceSource = Voicevox
+	case Coeiroink.Info.Type:
+		voiceSource = Coeiroink
+	case AquestalkProxy.Info.Type:
+		voiceSource = AquestalkProxy
 	default:
-		return errors.New(voiceerror)
+		return nil, NoSuchSource
 	}
+	if !voiceSource.GetInfo().Enabled {
+		return nil, SourceDisabled
+	}
+	return voiceSource, nil
 }
 
-func GetVoice(session *discordgo.Session, message *string, voice *config.Voice) (*dca.Decoder, error) {
-	var (
-		err error
-	)
-	crc := strconv.FormatUint(crc64.Checksum([]byte(voice.Source+voice.Type+*message), crc64.MakeTable(crc64.ISO)), 10)
+func VerifyVoice(source *string, voice string) error {
+	voiceSource, err := SourceSwitcher(source)
+	if err != nil {
+		return err
+	}
+	return voiceSource.Verify(voice)
+}
+
+func GetVoice(content *string, voice *config.Voice) (*dca.Decoder, error) {
+	crc := strconv.FormatUint(crc64.Checksum([]byte(voice.Source+voice.Type+*content), crc64.MakeTable(crc64.ISO)), 10)
 	_, exists := db.VoiceCache.Get(crc)
 	if !exists {
+		voiceSource, err := SourceSwitcher(&voice.Source)
+		if err != nil {
+			return nil, err
+		}
 		var bin *[]byte
 		for i := 0; i < config.CurrentConfig.Voices.Retry; i++ {
-			switch voice.Source {
-			case Watson:
-				if !config.CurrentConfig.Voices.Watson.Enabled {
-					return nil, errors.New("voice is not available:" + Watson)
-				}
-				bin, err = WatsonSynth(message, &voice.Type)
-			case Gtts:
-				if !config.CurrentConfig.Voices.Gtts.Enabled {
-					return nil, errors.New("voice is not available:" + Gtts)
-				}
-				bin, err = GttsSynth(message, &voice.Type)
-			case Gcp:
-				if !config.CurrentConfig.Voices.Gcp.Enabled {
-					return nil, errors.New("voice is not available:" + Gcp)
-				}
-				bin, err = GcpSynth(message, &voice.Type)
-			case Azure:
-				if !config.CurrentConfig.Voices.Azure.Enabled {
-					return nil, errors.New("voice is not available:" + Azure)
-				}
-				bin, err = AzureSynth(message, &voice.Type)
-			case VoiceText:
-				if !config.CurrentConfig.Voices.VoiceText.Enabled {
-					return nil, errors.New("voice is not available:" + VoiceText)
-				}
-				bin, err = VoiceTextSynth(message, &voice.Type)
-			case Voicevox:
-				if !config.CurrentConfig.Voices.Voicevox.Enabled {
-					return nil, errors.New("voice is not available:" + Voicevox)
-				}
-				bin, err = VoicevoxSynth(message, &voice.Type)
-			case Coeiroink:
-				if !config.CurrentConfig.Voices.Coeiroink.Enabled {
-					return nil, errors.New("voice is not available:" + Coeiroink)
-				}
-				bin, err = CoeiroinkSynth(message, &voice.Type)
-			case AquestalkProxy:
-				if !config.CurrentConfig.Voices.AquestalkProxy.Enabled {
-					return nil, errors.New("voice is not available:" + AquestalkProxy)
-				}
-				bin, err = AquestalkProxySynth(message, &voice.Type)
-
-			default:
-				return nil, errors.New("No such voice source:" + voice.Source)
-			}
+			bin, err = voiceSource.Synth(*content, &voice.Type)
 			if err == nil {
 				break
 			}
@@ -195,7 +158,10 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 		return Skipped //Skipped due to the disconnection
 	}
 
-	session.VoiceConnections[orgMsg.GuildID].Speaking(true)
+	err := session.VoiceConnections[orgMsg.GuildID].Speaking(true)
+	if err != nil {
+		return err
+	}
 	defer session.VoiceConnections[orgMsg.GuildID].Speaking(false)
 
 	for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
@@ -232,7 +198,7 @@ func VoiceDisconnect(session *discordgo.Session, guildID *string) error {
 	if db.StateCache[*guildID].Stream != nil {
 		db.StateCache[*guildID].Stream.SetPaused(true)
 		*db.StateCache[*guildID].Done <- io.EOF
-		time.Sleep(100 * time.Millisecond) // Super duper dirty hack
+		time.Sleep(100 * time.Millisecond) // Super-duper dirty hack
 	}
 	return session.GuildMemberMove(*guildID, session.State.User.ID, nil)
 }
@@ -258,94 +224,5 @@ func VoiceReconnect(session *discordgo.Session, guildID *string, channelID *stri
 }
 
 func CleanVoice() {
-	GcpClose()
-}
-
-func Replace(id *string, list *map[string]string, content string, trace bool) (*string, *string) {
-	var (
-		logStr string
-		start  time.Time
-		oldStr string
-	) // debug
-	if trace {
-		start = time.Now()
-		logStr = "Regex Replace() trace started at " + start.String() + " with string \"" + content + "\".\nGuildId is: " + *id + ".\n"
-	}
-
-	for k, v := range configRegexBefore {
-		if trace {
-			oldStr = content
-		}
-		content = k.ReplaceAllString(content, v)
-		if trace && content != oldStr {
-			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: " + content + "\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
-		}
-	}
-	if trace {
-		logStr += "Processed config before regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
-	}
-
-	val, exists := db.RegexCache[*id]
-	compiled := map[*regexp.Regexp]*string{}
-	if exists {
-		compiled = *val
-		if trace {
-			logStr += "Guild regex cache found.\nGot cache in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
-		}
-	} else {
-		if trace {
-			logStr += "Guild regex cache not found.\nCompiling regex...\n\n"
-		}
-		for k, v := range *list {
-			if trace {
-				logStr += "Compiling \"" + k + "\" ...\n"
-			}
-			regex, err := regexp.Compile(k)
-			if err == nil {
-				text := v //Let's encrypt knows everything
-				compiled[regex] = &text
-			} else {
-				if trace {
-					logStr += "|-Error occurred while compiling.\n" + err.Error() + ".\n|-Skipping...\n"
-				}
-			}
-		}
-		db.RegexCache[*id] = &compiled
-		if trace {
-			logStr += "Compiled regex in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n\n"
-		}
-	}
-	if trace {
-		logStr += "Starting process of " + strconv.Itoa(len(compiled)) + " user regex(s).\n\nRegex(s):\n"
-		for k, v := range compiled {
-			logStr += "|- \"" + k.String() + "\" => \"" + *v + "\"\n"
-		}
-		logStr += "\n"
-	}
-	for k, v := range compiled {
-		if trace {
-			oldStr = content
-		}
-		content = k.ReplaceAllString(content, *v)
-		if trace && content != oldStr {
-			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + *v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: \"" + content + "\"\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
-		}
-	}
-	if trace {
-		logStr += "Processed user regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
-	}
-
-	for k, v := range configRegexAfter {
-		if trace {
-			oldStr = content
-		}
-		content = k.ReplaceAllString(content, v)
-		if trace && content != oldStr {
-			logStr += "Regex hit!\n|-Regex: \"" + k.String() + "\"\n|-Replace: \"" + v + "\"\n|-oldStr: \"" + oldStr + "\"\n|-New: " + content + "\n|-Time: " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns\n\n"
-		}
-	}
-	if trace {
-		logStr += "Processed config after regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\nReplace() ended at " + time.Now().String() + " with string \"" + content + "\".\n"
-	}
-	return &content, &logStr
+	Gcp.Close()
 }

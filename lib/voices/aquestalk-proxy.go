@@ -11,9 +11,13 @@ import (
 	"strconv"
 )
 
-const (
-	AquestalkProxy = "aquestalk-proxy"
+var (
+	AquestalkProxy *aquestalkProxy
 )
+
+type aquestalkProxy struct {
+	Info VoiceInfo
+}
 
 type AquestalkProxyRequest struct {
 	VoiceType string `json:"type"`
@@ -22,6 +26,15 @@ type AquestalkProxyRequest struct {
 }
 
 func init() {
+	AquestalkProxy = &aquestalkProxy{
+		Info: VoiceInfo{
+			Type:             "aquestalk-proxy",
+			Format:           "pcm",
+			Container:        "wav",
+			ReEncodeRequired: true,
+			Enabled:          config.CurrentConfig.Voices.AquestalkProxy.Enabled,
+		},
+	}
 	if !config.CurrentConfig.Voices.AquestalkProxy.Enabled {
 		log.Print("WARN: aquestalk-proxy is disabled")
 		return
@@ -35,8 +48,8 @@ func init() {
 // 2. throw the exact same format json to the tcp socket of aquestalk-proxy
 // 3. Decode base64 wav from response
 
-func AquestalkProxySynth(content *string, voice *string) (*[]byte, error) {
-	request, err := json.Marshal(AquestalkProxyRequest{VoiceType: *voice, Speed: 100, Koe: *content})
+func (voiceSource aquestalkProxy) Synth(content string, voice *string) (*[]byte, error) {
+	request, err := json.Marshal(AquestalkProxyRequest{VoiceType: *voice, Speed: 100, Koe: content})
 	if err != nil {
 		return nil, err
 	}
@@ -55,11 +68,15 @@ func AquestalkProxySynth(content *string, voice *string) (*[]byte, error) {
 	return &bin, nil
 }
 
-func AquestalkProxyVerify(voice *string) error {
+func (voiceSource aquestalkProxy) Verify(voice string) error {
 	for _, v := range []string{"dvd", "f1", "f2", "imd1", "jgr", "m1", "m2", "r1"} {
-		if v == *voice {
+		if v == voice {
 			return nil
 		}
 	}
 	return errors.New("no such voice")
+}
+
+func (voiceSource aquestalkProxy) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

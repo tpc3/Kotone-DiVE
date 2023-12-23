@@ -13,41 +13,53 @@ import (
 )
 
 var (
-	client *texttospeech.Client
-	ctx    context.Context
+	Gcp gcp
 )
 
-const Gcp = "gcp"
+type gcp struct {
+	Info   VoiceInfo
+	client *texttospeech.Client
+	ctx    context.Context
+}
 
 func init() {
 	if !config.CurrentConfig.Voices.Gcp.Enabled {
 		log.Print("WARN: Gcp is disabled")
 		return
 	}
-	ctx = context.Background()
-	var err error
-	client, err = texttospeech.NewClient(ctx, option.WithCredentialsJSON([]byte(config.CurrentConfig.Voices.Gcp.Token)))
+	Gcp = gcp{
+		Info: VoiceInfo{
+			Type:             "gcp",
+			Format:           "opus",
+			Container:        "ogg",
+			ReEncodeRequired: false,
+			Enabled:          config.CurrentConfig.Voices.Gcp.Enabled,
+		},
+	}
+	Gcp.ctx = context.Background()
+	client, err := texttospeech.NewClient(Gcp.ctx, option.WithCredentialsJSON([]byte(config.CurrentConfig.Voices.Gcp.Token)))
 	if err != nil {
 		log.Fatal(err)
 	}
+	Gcp.client = client
 
 }
 
-func GcpClose() {
-	if config.CurrentConfig.Voices.Gcp.Enabled {
-		client.Close()
+func (voiceSource gcp) Close() {
+	if voiceSource.Info.Enabled {
+		voiceSource.client.Close()
 	}
 }
 
-func GcpSynth(content *string, voice *string) (*[]byte, error) {
-	lang, err := gcpLang(voice)
+func (voiceSource gcp) Synth(content string, voice *string) (*[]byte, error) {
+	lang, err := voiceSource.lang(voice)
 	if err != nil {
 		return nil, err
 	}
-	response, err := client.SynthesizeSpeech(ctx, &texttospeechpb.SynthesizeSpeechRequest{
+	response, err := voiceSource.client.SynthesizeSpeech(voiceSource.ctx, &texttospeechpb.SynthesizeSpeechRequest{
 		Input: &texttospeechpb.SynthesisInput{
 			InputSource: &texttospeechpb.SynthesisInput_Text{
-				Text: *content,
+				Text: content,
 			},
 		},
 		Voice: &texttospeechpb.VoiceSelectionParams{
@@ -65,7 +77,7 @@ func GcpSynth(content *string, voice *string) (*[]byte, error) {
 	return &c, nil
 }
 
-func gcpLang(voice *string) (string, error) {
+func (voiceSource gcp) lang(voice *string) (string, error) {
 	arr := strings.SplitN(*voice, "-", 4)
 	if len(arr) != 4 {
 		return "", errors.New("can't detect voice lang:" + *voice)
@@ -73,19 +85,23 @@ func gcpLang(voice *string) (string, error) {
 	return arr[0] + "-" + arr[1], nil
 }
 
-func GcpVerify(voice *string) error {
-	lang, err := gcpLang(voice)
+func (voiceSource gcp) Verify(voice string) error {
+	lang, err := voiceSource.lang(&voice)
 	if err != nil {
 		return err
 	}
-	response, err := client.ListVoices(ctx, &texttospeechpb.ListVoicesRequest{LanguageCode: lang})
+	response, err := voiceSource.client.ListVoices(voiceSource.ctx, &texttospeechpb.ListVoicesRequest{LanguageCode: lang})
 	if err != nil {
 		return err
 	}
 	for _, v := range response.GetVoices() {
-		if v.GetName() == *voice {
+		if v.GetName() == voice {
 			return nil
 		}
 	}
-	return errors.New("No such voice:" + *voice)
+	return errors.New("No such voice:" + voice)
+}
+
+func (voiceSource gcp) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

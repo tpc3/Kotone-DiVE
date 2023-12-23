@@ -14,14 +14,18 @@ import (
 )
 
 const (
-	Azure = "azure"
-	ssml  = "<speak version='1.0' xml:lang='%s'><voice xml:lang='%s' xml:gender='%s' name='%s'>%s</voice></speak>"
+	ssml = "<speak version='1.0' xml:lang='%s'><voice xml:lang='%s' xml:gender='%s' name='%s'>%s</voice></speak>"
 )
 
 var (
-	request     *http.Request
-	azureVoices map[string]azureVoice
+	Azure azure
 )
+
+type azure struct {
+	Info    VoiceInfo
+	voices  map[string]azureVoice
+	request *http.Request
+}
 
 type azureVoice struct {
 	ShortName string
@@ -31,18 +35,27 @@ type azureVoice struct {
 
 func init() {
 	baseUrl := "https://" + config.CurrentConfig.Voices.Azure.Region + ".tts.speech.microsoft.com/cognitiveservices/"
+	Azure = azure{
+		Info: VoiceInfo{
+			Type:             "azure",
+			Format:           "opus",
+			Container:        "ogg",
+			ReEncodeRequired: false,
+			Enabled:          config.CurrentConfig.Voices.Azure.Enabled,
+		},
+	}
 	if !config.CurrentConfig.Voices.Azure.Enabled {
 		log.Print("WARN: azure is disabled")
 		return
 	}
-	var err error
-	request, err = http.NewRequest(http.MethodPost, baseUrl+"v1", nil)
+	request, err := http.NewRequest(http.MethodPost, baseUrl+"v1", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	request.Header.Add("Ocp-Apim-Subscription-Key", config.CurrentConfig.Voices.Azure.Key)
 	request.Header.Add("Content-Type", "application/ssml+xml")
 	request.Header.Add("X-Microsoft-OutputFormat", "ogg-48khz-16bit-mono-opus")
+	Azure.request = request
 
 	getReq, err := http.NewRequest(http.MethodGet, baseUrl+"voices/list", nil)
 	if err != nil {
@@ -72,23 +85,23 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	azureVoices = map[string]azureVoice{}
+	Azure.voices = map[string]azureVoice{}
 	for _, v := range voices {
-		azureVoices[v.ShortName] = v
+		Azure.voices[v.ShortName] = v
 	}
 }
 
-func AzureSynth(content *string, voice *string) (*[]byte, error) {
-	val, exists := azureVoices[*voice]
+func (voiceSource azure) Synth(content string, voice *string) (*[]byte, error) {
+	val, exists := voiceSource.voices[*voice]
 	if !exists {
 		return nil, errors.New("invalid voice type")
 	}
 	buffer := bytes.Buffer{}
-	err := xml.EscapeText(&buffer, []byte(*content))
+	err := xml.EscapeText(&buffer, []byte(content))
 	if err != nil {
 		return nil, err
 	}
-	tmpReq := request
+	tmpReq := voiceSource.request
 	tmpReq.Body = io.NopCloser(strings.NewReader(fmt.Sprintf(ssml, val.Locale, val.Locale, val.Gender, val.ShortName, buffer.String())))
 	cli := http.Client{}
 	res, err := cli.Do(tmpReq)
@@ -103,10 +116,14 @@ func AzureSynth(content *string, voice *string) (*[]byte, error) {
 	return &bin, nil
 }
 
-func AzureVerify(voice *string) error {
-	_, exists := azureVoices[*voice]
+func (voiceSource azure) Verify(voice string) error {
+	_, exists := voiceSource.voices[voice]
 	if !exists {
-		return errors.New("invalid voice type: " + *voice)
+		return errors.New("invalid voice type: " + voice)
 	}
 	return nil
+}
+
+func (voiceSource azure) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

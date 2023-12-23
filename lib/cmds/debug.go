@@ -2,7 +2,7 @@ package cmds
 
 import (
 	"Kotone-DiVE/lib/config"
-	"Kotone-DiVE/lib/voices"
+	"Kotone-DiVE/lib/utils"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -18,6 +18,6 @@ func DebugCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 	} else {
 		str = parsed[1]
 	}
-	_, trace := voices.Replace(&orgMsg.GuildID, &guild.Replace, str, true)
+	_, trace := utils.Replace(&orgMsg.GuildID, &guild.Replace, str, true)
 	session.ChannelFileSendWithMessage(orgMsg.ChannelID, "Debugging replace engine.", "debug.log", strings.NewReader(*trace))
 }

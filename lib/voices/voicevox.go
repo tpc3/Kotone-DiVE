@@ -12,14 +12,15 @@ import (
 	"strconv"
 )
 
-const (
-	Voicevox = "voicevox"
+var (
+	Voicevox voicevox
 )
 
-var (
-	vvSpeakers         Speakers
-	vvSynthesisRequest *http.Request
-)
+type voicevox struct {
+	Info     VoiceInfo
+	speakers Speakers
+	request  *http.Request
+}
 
 type Speakers struct {
 	Speakers []Speaker
@@ -37,6 +38,15 @@ type Style struct {
 }
 
 func init() {
+	Voicevox = voicevox{
+		Info: VoiceInfo{
+			Type:             "voicevox",
+			Format:           "pcm",
+			Container:        "wav",
+			ReEncodeRequired: true,
+			Enabled:          config.CurrentConfig.Voices.Voicevox.Enabled,
+		},
+	}
 	if !config.CurrentConfig.Voices.Voicevox.Enabled {
 		log.Print("WARN: Voicevox is disabled")
 		return
@@ -50,19 +60,20 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = json.Unmarshal([]byte("{ \"speakers\": "+string(bin)+" }"), &vvSpeakers)
+	err = json.Unmarshal([]byte("{ \"speakers\": "+string(bin)+" }"), &Voicevox.speakers)
 	if err != nil {
 		log.Fatal(err)
 	}
-	vvSynthesisRequest, err = http.NewRequest(http.MethodPost, config.CurrentConfig.Voices.Voicevox.Api+"/synthesis", nil)
+	request, err := http.NewRequest(http.MethodPost, config.CurrentConfig.Voices.Voicevox.Api+"/synthesis", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+	Voicevox.request = request
 }
 
-func VoicevoxSynth(content *string, voice *string) (*[]byte, error) {
+func (voiceSource voicevox) Synth(content string, voice *string) (*[]byte, error) {
 	id := -1
-	for _, speaker := range vvSpeakers.Speakers {
+	for _, speaker := range voiceSource.speakers.Speakers {
 		for _, v := range speaker.Styles {
 			if speaker.Name+v.Name == *voice {
 				id = v.Id
@@ -75,7 +86,7 @@ func VoicevoxSynth(content *string, voice *string) (*[]byte, error) {
 	}
 
 	// copy
-	res, err := http.Post(config.CurrentConfig.Voices.Voicevox.Api+"/audio_query?speaker="+strconv.Itoa(id)+"&text="+url.QueryEscape(*content), "", nil)
+	res, err := http.Post(config.CurrentConfig.Voices.Voicevox.Api+"/audio_query?speaker="+strconv.Itoa(id)+"&text="+url.QueryEscape(content), "", nil)
 
 	if err != nil {
 		return nil, err
@@ -86,7 +97,7 @@ func VoicevoxSynth(content *string, voice *string) (*[]byte, error) {
 	}
 
 	// copy
-	req := *vvSynthesisRequest
+	req := *voiceSource.request
 
 	query := res.Body
 	buf := new(bytes.Buffer)
@@ -116,13 +127,16 @@ func VoicevoxSynth(content *string, voice *string) (*[]byte, error) {
 	return &bin, nil
 }
 
-func VoicevoxVerify(voice *string) error {
-	for _, speaker := range vvSpeakers.Speakers {
+func (voiceSource voicevox) Verify(voice string) error {
+	for _, speaker := range voiceSource.speakers.Speakers {
 		for _, v := range speaker.Styles {
-			if speaker.Name+v.Name == *voice {
+			if speaker.Name+v.Name == voice {
 				return nil
 			}
 		}
 	}
 	return errors.New("no such voice")
+}
+func (voiceSource voicevox) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

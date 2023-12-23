@@ -12,15 +12,32 @@ import (
 )
 
 const (
-	Gtts  = "gtts"
 	token = "368668.249914"
 )
 
-func GttsSynth(content *string, voice *string) (*[]byte, error) {
+var Gtts *gtts
+
+type gtts struct {
+	Info VoiceInfo
+}
+
+func init() {
+	Gtts = &gtts{
+		Info: VoiceInfo{
+			Type:             "gtts",
+			Format:           "mp3",
+			Container:        "mp3",
+			ReEncodeRequired: false,
+			Enabled:          config.CurrentConfig.Voices.Gtts.Enabled,
+		},
+	}
+}
+
+func (voiceSource gtts) Synth(content string, voice *string) (*[]byte, error) {
 	url, err := googletts.GetTTSURLWithOption(googletts.Option{
 		Lang:  *voice,
 		Token: token,
-		Text:  *content,
+		Text:  content,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -44,8 +61,12 @@ func GttsSynth(content *string, voice *string) (*[]byte, error) {
 	return &bin, nil
 }
 
-func GttsVerify(voice *string) error {
+func (voiceSource gtts) Verify(voice string) error {
 	str := "test"
-	_, err := GttsSynth(&str, voice)
+	_, err := Gtts.Synth(str, &voice)
 	return err
+}
+
+func (voiceSource gtts) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }

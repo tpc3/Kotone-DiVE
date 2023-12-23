@@ -14,33 +14,50 @@ import (
 )
 
 var (
-	tts *texttospeechv1.TextToSpeechV1
+	Watson *watson
 )
 
-const Watson = "watson"
+type watson struct {
+	Info VoiceInfo
+	tts  *texttospeechv1.TextToSpeechV1
+}
 
 func init() {
+	Watson = &watson{
+		Info: VoiceInfo{
+			Type:             "watson",
+			Format:           "opus",
+			Container:        "ogg",
+			ReEncodeRequired: false,
+			Enabled:          config.CurrentConfig.Voices.Watson.Enabled,
+		},
+	}
 	if !config.CurrentConfig.Voices.Watson.Enabled {
-		log.Print("WARN: Voice \"Watson\" is disabled")
+		log.Print("WARN: Watson is disabled")
 		return
 	}
 	auth := &core.IamAuthenticator{ApiKey: config.CurrentConfig.Voices.Watson.Token}
-	var err error
-	tts, err = texttospeechv1.NewTextToSpeechV1(&texttospeechv1.TextToSpeechV1Options{Authenticator: auth})
+	tts, err := texttospeechv1.NewTextToSpeechV1(&texttospeechv1.TextToSpeechV1Options{Authenticator: auth})
 	if err != nil {
 		log.Fatal("Watson init error:", err)
 	}
-	tts.SetServiceURL(config.CurrentConfig.Voices.Watson.Api)
+	err = tts.SetServiceURL(config.CurrentConfig.Voices.Watson.Api)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	Watson.tts = tts
 }
 
-func WatsonSynth(content *string, voice *string) (*[]byte, error) {
+func (voiceSource watson) Synth(content string, voice *string) (*[]byte, error) {
 	var buf bytes.Buffer
-	err := xml.EscapeText(&buf, []byte(*content))
+	err := xml.EscapeText(&buf, []byte(content))
 	if err != nil {
 		return nil, err
 	}
 	str := buf.String()
-	result, response, err := tts.Synthesize(&texttospeechv1.SynthesizeOptions{
+	result, response, err := voiceSource.tts.Synthesize(&texttospeechv1.SynthesizeOptions{
 		Text:   &str,
 		Accept: core.StringPtr("audio/ogg;codecs=opus"),
 		Voice:  voice,
@@ -53,21 +70,24 @@ func WatsonSynth(content *string, voice *string) (*[]byte, error) {
 	}
 	if response.StatusCode != 200 {
 		// ???
-		return nil, errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
+		return nil, errors.New("Invalid status code from Watson:" + strconv.Itoa(response.StatusCode))
 	}
 	if result != nil {
 		bin, err := io.ReadAll(result)
 		if err != nil {
 			return nil, err
 		}
-		result.Close()
+		err = result.Close()
+		if err != nil {
+			return nil, err
+		}
 		return &bin, nil
 	}
 	return nil, nil
 }
 
-func WatsonVerify(voice *string) error {
-	result, response, err := tts.ListVoices(&texttospeechv1.ListVoicesOptions{})
+func (voiceSource watson) Verify(voice string) error {
+	result, response, err := voiceSource.tts.ListVoices(&texttospeechv1.ListVoicesOptions{})
 	if config.CurrentConfig.Debug {
 		log.Print(response)
 	}
@@ -75,14 +95,18 @@ func WatsonVerify(voice *string) error {
 		return err
 	}
 	if response.StatusCode != 200 {
-		return errors.New("Invalid statuscode from Watson:" + strconv.Itoa(response.StatusCode))
+		return errors.New("Invalid status code from Watson:" + strconv.Itoa(response.StatusCode))
 	}
 	if result != nil {
 		for _, v := range result.Voices {
-			if *v.Name == *voice {
+			if *v.Name == voice {
 				return nil
 			}
 		}
 	}
-	return errors.New("Voice is not implemented:" + *voice)
+	return errors.New("Voice is not implemented:" + voice)
+}
+
+func (voiceSource watson) GetInfo() VoiceInfo {
+	return voiceSource.Info
 }
