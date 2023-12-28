@@ -4,8 +4,7 @@ import (
 	"Kotone-DiVE/lib/config"
 	"Kotone-DiVE/lib/db"
 	"Kotone-DiVE/lib/embed"
-	"Kotone-DiVE/lib/voices"
-
+	"Kotone-DiVE/lib/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -24,7 +23,7 @@ func LeaveCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guild.Lang, config.Lang[guild.Lang].Error.Leave.None))
 			return
 		}
-		err = voices.VoiceDisconnect(session, &orgMsg.GuildID)
+		err = utils.VoiceDisconnect(session, orgMsg.GuildID)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return

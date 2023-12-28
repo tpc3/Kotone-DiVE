@@ -7,18 +7,14 @@ import (
 	"Kotone-DiVE/lib/embed"
 	"Kotone-DiVE/lib/utils"
 	"Kotone-DiVE/lib/voices"
+	"errors"
 	"log"
 	"runtime/debug"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/jonas747/dca"
 )
-
-func init() {
-	dca.Logger = nil
-}
 
 func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) {
 	var start time.Time
@@ -26,7 +22,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 		start = time.Now()
 	}
 
-	guild := db.LoadGuild(&orgMsg.GuildID)
+	guild := db.LoadGuild(orgMsg.GuildID)
 	defer func() {
 		if err := recover(); err != nil {
 			log.Print("Oops, ", err)
@@ -35,7 +31,7 @@ func MessageCreate(session *discordgo.Session, orgMsg *discordgo.MessageCreate) 
 	}()
 
 	// Ignore all messages created by the bot itself
-	// This isn't required in this specific example but it's a good practice.
+	// This isn't required in this specific example, but it's a good practice.
 	if orgMsg.Author.ID == session.State.User.ID || orgMsg.Content == "" {
 		return
 	}
@@ -88,14 +84,14 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 
 	if !guild.ReadAllUsers && !orgMsg.Author.Bot {
 		state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
-		if err == discordgo.ErrStateNotFound {
+		if errors.Is(err, discordgo.ErrStateNotFound) {
 			return
 		} else if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 			return
 		}
 		mystate, err := session.State.VoiceState(orgMsg.GuildID, session.State.User.ID)
-		if err == discordgo.ErrStateNotFound {
+		if errors.Is(err, discordgo.ErrStateNotFound) {
 			return // ?????
 		} else if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
@@ -127,7 +123,7 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	}
 
 	var voice *config.Voice
-	user, err := db.LoadUser(&orgMsg.Author.ID)
+	user, err := db.LoadUser(orgMsg.Author.ID)
 
 	if err != nil || user.Voice.Source == "" {
 		voice = &guild.Voice
@@ -141,21 +137,21 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		return
 	}
 
-	replaced, _ := utils.Replace(&orgMsg.GuildID, &guild.Replace, content, false)
-	if len(strings.TrimSpace(*replaced)) == 0 {
+	replaced, _ := utils.Replace(orgMsg.GuildID, guild.Replace, content, false)
+	if len(strings.TrimSpace(replaced)) == 0 {
 		return
 	}
 
-	runeContent := []rune(*replaced)
+	runeContent := []rune(replaced)
 	if len(runeContent) > guild.MaxChar {
 		content = string(runeContent[:guild.MaxChar])
 	} else {
-		content = *replaced
+		content = replaced
 	}
 
 	var (
-		encodedName    *dca.Decoder
-		encodedContent *dca.Decoder
+		encodedName    []byte
+		encodedContent []byte
 	)
 	if guild.ReadName {
 		var name *string
@@ -166,12 +162,12 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 		} else {
 			name = &strings.Split(orgMsg.Author.Username, "#")[0]
 		}
-		encodedName, err = voices.GetVoice(name, voice)
+		encodedName, err = voices.GetVoice(*name, voice)
 		if err != nil {
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		}
 	}
-	encodedContent, err = voices.GetVoice(&content, voice)
+	encodedContent, err = voices.GetVoice(content, voice)
 	if err != nil {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		return
@@ -190,14 +186,14 @@ func ttsHandler(session *discordgo.Session, orgMsg *discordgo.MessageCreate, gui
 	if guild.ReadName && encodedName != nil {
 		err = voices.ReadVoice(session, orgMsg, encodedName)
 		if err != nil {
-			if err == voices.Skipped {
+			if errors.Is(err, voices.Skipped) {
 				return
 			}
 			session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 		}
 	}
 	err = voices.ReadVoice(session, orgMsg, encodedContent)
-	if err != nil && err != voices.Skipped {
+	if err != nil && !errors.Is(err, voices.Skipped) {
 		session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewUnknownErrorEmbed(session, orgMsg, guild.Lang, err))
 	}
 }
@@ -251,7 +247,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	}
 
 	if alone {
-		err = voices.VoiceDisconnect(session, &guild.ID)
+		err = utils.VoiceDisconnect(session, guild.ID)
 		if err != nil {
 			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
 		}
@@ -260,10 +256,10 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 
 	if state.UserID == session.State.User.ID && state.BeforeUpdate != nil {
 		if state.BeforeUpdate.ChannelID != state.ChannelID && !exists {
-			voices.VoiceReconnect(session, &state.GuildID, &state.ChannelID)
+			utils.VoiceReconnect(session, state.GuildID, state.ChannelID)
 		} else if !db.StateCache[state.GuildID].ManualReconnectionOngoing {
 			if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
-				log.Print("WARN: VoiceStateUpdate detected reconection.")
+				log.Print("WARN: VoiceStateUpdate detected recollection.")
 				db.StateCache[state.GuildID].ReconnectionDetected = true
 			}
 		}

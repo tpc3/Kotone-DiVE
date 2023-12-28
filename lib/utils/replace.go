@@ -24,7 +24,7 @@ func init() {
 	}
 }
 
-func Replace(id *string, list *map[string]string, content string, trace bool) (*string, *string) {
+func Replace(id string, list map[string]string, content string, trace bool) (string, string) {
 	var (
 		logStr string
 		start  time.Time
@@ -32,7 +32,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 	) // debug
 	if trace {
 		start = time.Now()
-		logStr = "Regex Replace() trace started at " + start.String() + " with string \"" + content + "\".\nGuildId is: " + *id + ".\n"
+		logStr = "Regex Replace() trace started at " + start.String() + " with string \"" + content + "\".\nGuildId is: " + id + ".\n"
 	}
 
 	for k, v := range configRegexBefore {
@@ -48,7 +48,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 		logStr += "Processed config before regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n"
 	}
 
-	val, exists := db.RegexCache[*id]
+	val, exists := db.RegexCache[id]
 	compiled := map[*regexp.Regexp]*string{}
 	if exists {
 		compiled = *val
@@ -59,7 +59,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 		if trace {
 			logStr += "Guild regex cache not found.\nCompiling regex...\n\n"
 		}
-		for k, v := range *list {
+		for k, v := range list {
 			if trace {
 				logStr += "Compiling \"" + k + "\" ...\n"
 			}
@@ -73,7 +73,7 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 				}
 			}
 		}
-		db.RegexCache[*id] = &compiled
+		db.RegexCache[id] = &compiled
 		if trace {
 			logStr += "Compiled regex in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\n\n"
 		}
@@ -110,5 +110,5 @@ func Replace(id *string, list *map[string]string, content string, trace bool) (*
 	if trace {
 		logStr += "Processed config after regex(s) in " + strconv.FormatInt(time.Since(start).Nanoseconds(), 10) + "ns.\nReplace() ended at " + time.Now().String() + " with string \"" + content + "\".\n"
 	}
-	return &content, &logStr
+	return content, logStr
 }

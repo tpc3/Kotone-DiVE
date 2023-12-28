@@ -91,8 +91,8 @@ func init() {
 	}
 }
 
-func (voiceSource azure) Synth(content string, voice *string) (*[]byte, error) {
-	val, exists := voiceSource.voices[*voice]
+func (voiceSource azure) Synth(content string, voice string) ([]byte, error) {
+	val, exists := voiceSource.voices[voice]
 	if !exists {
 		return nil, errors.New("invalid voice type")
 	}
@@ -113,7 +113,7 @@ func (voiceSource azure) Synth(content string, voice *string) (*[]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource azure) Verify(voice string) error {

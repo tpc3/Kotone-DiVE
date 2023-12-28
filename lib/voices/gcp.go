@@ -51,7 +51,7 @@ func (voiceSource gcp) Close() {
 	}
 }
 
-func (voiceSource gcp) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource gcp) Synth(content string, voice string) ([]byte, error) {
 	lang, err := voiceSource.lang(voice)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (voiceSource gcp) Synth(content string, voice *string) (*[]byte, error) {
 		},
 		Voice: &texttospeechpb.VoiceSelectionParams{
 			LanguageCode: lang,
-			Name:         *voice,
+			Name:         voice,
 		},
 		AudioConfig: &texttospeechpb.AudioConfig{
 			AudioEncoding: texttospeechpb.AudioEncoding_OGG_OPUS,
@@ -74,19 +74,19 @@ func (voiceSource gcp) Synth(content string, voice *string) (*[]byte, error) {
 		return nil, err
 	}
 	c := response.GetAudioContent()
-	return &c, nil
+	return c, nil
 }
 
-func (voiceSource gcp) lang(voice *string) (string, error) {
-	arr := strings.SplitN(*voice, "-", 4)
+func (voiceSource gcp) lang(voice string) (string, error) {
+	arr := strings.SplitN(voice, "-", 4)
 	if len(arr) != 4 {
-		return "", errors.New("can't detect voice lang:" + *voice)
+		return "", errors.New("can't detect voice lang:" + voice)
 	}
 	return arr[0] + "-" + arr[1], nil
 }
 
 func (voiceSource gcp) Verify(voice string) error {
-	lang, err := voiceSource.lang(&voice)
+	lang, err := voiceSource.lang(voice)
 	if err != nil {
 		return err
 	}

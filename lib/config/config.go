@@ -2,8 +2,8 @@ package config
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -91,7 +91,7 @@ var CurrentConfig Config
 
 func init() {
 	loadLang()
-	file, err := ioutil.ReadFile(configFile)
+	file, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatal("Config load failed:", err)
 	}

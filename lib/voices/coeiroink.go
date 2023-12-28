@@ -64,11 +64,11 @@ func init() {
 	Coeiroink.Request = request
 }
 
-func (voiceSource coeiroink) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource coeiroink) Synth(content string, voice string) ([]byte, error) {
 	id := -1
 	for _, speaker := range voiceSource.Speakers.Speakers {
 		for _, v := range speaker.Styles {
-			if speaker.Name+v.Name == *voice {
+			if speaker.Name+v.Name == voice {
 				id = v.Id
 				break
 			}
@@ -117,7 +117,7 @@ func (voiceSource coeiroink) Synth(content string, voice *string) (*[]byte, erro
 	if res.StatusCode != 200 {
 		return nil, errors.New("Response code error from coeiroink:" + strconv.Itoa(res.StatusCode) + " " + string(bin))
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource coeiroink) Verify(voice string) error {

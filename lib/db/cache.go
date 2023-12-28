@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jonas747/dca"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -21,8 +20,8 @@ var (
 type GuildVCState struct {
 	Lock                      sync.Mutex
 	Channel                   string
-	Done                      *chan error
-	Stream                    *dca.StreamingSession
+	Stop                      *chan bool
+	FrameCount                int
 	ReconnectionDetected      bool
 	ManualReconnectionOngoing bool
 }

@@ -48,7 +48,7 @@ func init() {
 	VoiceText.request = request
 }
 
-func (voiceSource voiceText) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource voiceText) Synth(content string, voice string) ([]byte, error) {
 	var text string
 	runeContent := []rune(content)
 	if len(runeContent) > 200 {
@@ -59,7 +59,7 @@ func (voiceSource voiceText) Synth(content string, voice *string) (*[]byte, erro
 
 	values := url.Values{}
 	values.Set("text", text)
-	values.Set("speaker", *voice)
+	values.Set("speaker", voice)
 
 	// copy
 	req := *voiceSource.request
@@ -85,7 +85,7 @@ func (voiceSource voiceText) Synth(content string, voice *string) (*[]byte, erro
 	if res.StatusCode != 200 {
 		return nil, errors.New("Response code error from voicetext:" + strconv.Itoa(res.StatusCode) + " " + string(bin))
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource voiceText) Verify(voice string) error {

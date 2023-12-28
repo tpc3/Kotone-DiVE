@@ -71,11 +71,11 @@ func init() {
 	Voicevox.request = request
 }
 
-func (voiceSource voicevox) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource voicevox) Synth(content string, voice string) ([]byte, error) {
 	id := -1
 	for _, speaker := range voiceSource.speakers.Speakers {
 		for _, v := range speaker.Styles {
-			if speaker.Name+v.Name == *voice {
+			if speaker.Name+v.Name == voice {
 				id = v.Id
 				break
 			}
@@ -101,13 +101,13 @@ func (voiceSource voicevox) Synth(content string, voice *string) (*[]byte, error
 
 	query := res.Body
 	buf := new(bytes.Buffer)
-	len, err := buf.ReadFrom(query)
+	length, err := buf.ReadFrom(query)
 	if err != nil {
 		return nil, err
 	}
 	req.URL.RawQuery = "speaker=" + strconv.Itoa(id)
 	req.Body = io.NopCloser(buf)
-	req.ContentLength = len
+	req.ContentLength = length
 	req.GetBody = func() (io.ReadCloser, error) { return req.Body, nil }
 	req.Header.Set("Content-Type", "application/json")
 
@@ -124,7 +124,7 @@ func (voiceSource voicevox) Synth(content string, voice *string) (*[]byte, error
 	if res.StatusCode != 200 {
 		return nil, errors.New("Response code error from voicevox:" + strconv.Itoa(res.StatusCode) + " " + string(bin))
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource voicevox) Verify(voice string) error {

@@ -34,6 +34,7 @@ Suitable for self-host usage.
   * Our docker image currently provides: `linux/386`, `linux/amd64`, `linux/arm64`, `linux/arm/v6`, `linux/arm/v7`
   * ArchLinux: `pacman -Syu --needed docker`
 * Or if you just want to test or do not want to use docker, simply download binary from releases or GitHub Actions.
+  * In that case, make sure that you have installed latest ffmpeg on your computer.
   * Our CI currently builds: `linux-386`, `linux-amd64`, `linux-arm`, `linux-arm64`, `darwin-amd64`, `darwin-arm64`, `windows-386`, `windows-amd64`
 
 ### Run

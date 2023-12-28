@@ -48,8 +48,8 @@ func init() {
 // 2. throw the exact same format json to the tcp socket of aquestalk-proxy
 // 3. Decode base64 wav from response
 
-func (voiceSource aquestalkProxy) Synth(content string, voice *string) (*[]byte, error) {
-	request, err := json.Marshal(AquestalkProxyRequest{VoiceType: *voice, Speed: 100, Koe: content})
+func (voiceSource aquestalkProxy) Synth(content string, voice string) ([]byte, error) {
+	request, err := json.Marshal(AquestalkProxyRequest{VoiceType: voice, Speed: 100, Koe: content})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (voiceSource aquestalkProxy) Synth(content string, voice *string) (*[]byte,
 	if err != nil {
 		return nil, err
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource aquestalkProxy) Verify(voice string) error {

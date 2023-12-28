@@ -33,9 +33,9 @@ func init() {
 	}
 }
 
-func (voiceSource gtts) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource gtts) Synth(content string, voice string) ([]byte, error) {
 	url, err := googletts.GetTTSURLWithOption(googletts.Option{
-		Lang:  *voice,
+		Lang:  voice,
 		Token: token,
 		Text:  content,
 	})
@@ -58,12 +58,12 @@ func (voiceSource gtts) Synth(content string, voice *string) (*[]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &bin, nil
+	return bin, nil
 }
 
 func (voiceSource gtts) Verify(voice string) error {
 	str := "test"
-	_, err := Gtts.Synth(str, &voice)
+	_, err := Gtts.Synth(str, voice)
 	return err
 }
 

@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	log.Print("Kotone-DiVE started successfly!")
+	log.Print("Kotone-DiVE started successfully!")
 	discord.UpdateGameStatus(0, config.CurrentConfig.Discord.Status)
 	defer discord.Close()
 	defer db.Close()

@@ -18,6 +18,6 @@ func DebugCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guild
 	} else {
 		str = parsed[1]
 	}
-	_, trace := utils.Replace(&orgMsg.GuildID, &guild.Replace, str, true)
-	session.ChannelFileSendWithMessage(orgMsg.ChannelID, "Debugging replace engine.", "debug.log", strings.NewReader(*trace))
+	_, trace := utils.Replace(orgMsg.GuildID, guild.Replace, str, true)
+	session.ChannelFileSendWithMessage(orgMsg.ChannelID, "Debugging replace engine.", "debug.log", strings.NewReader(trace))
 }

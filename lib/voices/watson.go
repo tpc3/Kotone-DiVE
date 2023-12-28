@@ -50,7 +50,7 @@ func init() {
 	Watson.tts = tts
 }
 
-func (voiceSource watson) Synth(content string, voice *string) (*[]byte, error) {
+func (voiceSource watson) Synth(content string, voice string) ([]byte, error) {
 	var buf bytes.Buffer
 	err := xml.EscapeText(&buf, []byte(content))
 	if err != nil {
@@ -60,7 +60,7 @@ func (voiceSource watson) Synth(content string, voice *string) (*[]byte, error) 
 	result, response, err := voiceSource.tts.Synthesize(&texttospeechv1.SynthesizeOptions{
 		Text:   &str,
 		Accept: core.StringPtr("audio/ogg;codecs=opus"),
-		Voice:  voice,
+		Voice:  &voice,
 	})
 	if config.CurrentConfig.Debug {
 		log.Print(response)
@@ -81,7 +81,7 @@ func (voiceSource watson) Synth(content string, voice *string) (*[]byte, error) 
 		if err != nil {
 			return nil, err
 		}
-		return &bin, nil
+		return bin, nil
 	}
 	return nil, nil
 }
