@@ -154,21 +154,26 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 		stop := make(chan bool)
 		defer close(stop)
 		db.StateCache[orgMsg.GuildID].Stop = &stop
-	FrameLoop:
-		for i, v := range frames[db.StateCache[orgMsg.GuildID].FrameCount:] {
-			select {
-			case <-stop:
-				err = Skipped
-				break FrameLoop
-			default:
-				db.StateCache[orgMsg.GuildID].FrameCount = i
-				if session.VoiceConnections[orgMsg.GuildID].Ready == false || session.VoiceConnections[orgMsg.GuildID].OpusSend == nil {
-					err = VoiceConnClosed
-					break FrameLoop
+
+		result := make(chan error)
+		go func() {
+			for _, v := range frames[db.StateCache[orgMsg.GuildID].FrameCount:] {
+				select {
+				case <-stop:
+					result <- Skipped
+					return
+				default:
+					db.StateCache[orgMsg.GuildID].FrameCount++
+					if session.VoiceConnections[orgMsg.GuildID].Ready == false || session.VoiceConnections[orgMsg.GuildID].OpusSend == nil {
+						result <- VoiceConnClosed
+						return
+					}
+					session.VoiceConnections[orgMsg.GuildID].OpusSend <- v
 				}
-				session.VoiceConnections[orgMsg.GuildID].OpusSend <- v
 			}
-		}
+			result <- nil
+		}()
+		err := <-result
 
 		_, exists := db.StateCache[orgMsg.GuildID]
 		if !exists {
@@ -177,7 +182,9 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 		db.StateCache[orgMsg.GuildID].Stop = nil
 
 		switch {
-		case err == io.EOF:
+		case errors.Is(err, io.EOF):
+			fallthrough
+		case errors.Is(err, Skipped):
 			fallthrough
 		case err == nil:
 			db.StateCache[orgMsg.GuildID].FrameCount = 0

@@ -3,6 +3,7 @@ package embed
 import (
 	"Kotone-DiVE/lib/config"
 	"log"
+	"runtime/debug"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -43,6 +44,9 @@ func NewErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, 
 
 func NewUnknownErrorEmbed(session *discordgo.Session, orgMsg *discordgo.MessageCreate, lang string, err error) *discordgo.MessageEmbed {
 	log.Print("WARN: UnknownError called:", err)
+	if config.CurrentConfig.Debug {
+		debug.PrintStack()
+	}
 	UnknownErrorNum++
 	return NewErrorEmbed(session, orgMsg, lang, config.Lang[lang].Error.Unknown)
 }

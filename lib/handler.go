@@ -259,7 +259,7 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 			utils.VoiceReconnect(session, state.GuildID, state.ChannelID)
 		} else if !db.StateCache[state.GuildID].ManualReconnectionOngoing {
 			if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
-				log.Print("WARN: VoiceStateUpdate detected recollection.")
+				log.Print("WARN: VoiceStateUpdate detected reconnection.")
 				db.StateCache[state.GuildID].ReconnectionDetected = true
 			}
 		}
