@@ -111,6 +111,9 @@ func GetVoice(content string, voice *config.Voice) ([]byte, error) {
 		}
 
 		result, err := Encode(bin, voiceSource.GetInfo())
+		if err != nil {
+			return nil, err
+		}
 		db.VoiceCache.Add(crc, result, cache.DefaultExpiration)
 	}
 

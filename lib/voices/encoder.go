@@ -6,11 +6,46 @@ import (
 	"github.com/pion/opus/pkg/oggreader"
 	"github.com/u2takey/ffmpeg-go"
 	"io"
+	"log"
+	"os/exec"
 )
+
+var opusencPath string
+
+func init() {
+	path, err := exec.LookPath("opusenc")
+	if err != nil {
+		log.Print("WARN: Opusenc doesn't exists on PATH.")
+	} else {
+		opusencPath = path
+	}
+	_, err = exec.LookPath("ffmpeg")
+	if err != nil {
+		log.Print("WARN: ffmpeg doesn't exists on PATH.")
+	}
+}
 
 func Encode(orgData []byte, voiceInfo VoiceInfo) ([]byte, error) {
 	switch voiceInfo.Container {
 	//ToDo: Write pure-go
+	case "ogg":
+		if voiceInfo.Format == "opus" {
+			return orgData, nil
+		}
+		fallthrough
+	case "wav":
+		if opusencPath != "" {
+			cmd := exec.Command(opusencPath, "--bitrate", "40", "--speech", "--downmix-stereo", "-", "-")
+			cmd.Stdin = bytes.NewReader(orgData)
+			var buf bytes.Buffer
+			cmd.Stdout = &buf
+			err := cmd.Run()
+			if err != nil {
+				return nil, err
+			}
+			return buf.Bytes(), nil
+		}
+		fallthrough
 	default:
 		// https://datatracker.ietf.org/doc/html/rfc6716#section-2.1.1
 		outBuf := bytes.NewBuffer(nil)

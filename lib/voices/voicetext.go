@@ -29,8 +29,8 @@ func init() {
 	VoiceText = voiceText{
 		Info: VoiceInfo{
 			Type:             "voicetext",
-			Format:           "opus",
-			Container:        "ogg",
+			Format:           "pcm",
+			Container:        "wav",
 			ReEncodeRequired: false,
 			Enabled:          config.CurrentConfig.Voices.VoiceText.Enabled,
 		},
