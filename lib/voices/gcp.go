@@ -1,7 +1,7 @@
 package voices
 
 import (
-	"Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"context"
 	"errors"
 	"log"

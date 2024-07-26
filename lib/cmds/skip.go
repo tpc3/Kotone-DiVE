@@ -1,9 +1,9 @@
 package cmds
 
 import (
-	"Kotone-DiVE/lib/config"
-	"Kotone-DiVE/lib/db"
-	"Kotone-DiVE/lib/embed"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/db"
+	"github.com/tpc3/Kotone-DiVE/lib/embed"
 	"github.com/bwmarrin/discordgo"
 )
 

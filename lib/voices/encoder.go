@@ -1,7 +1,7 @@
 package voices
 
 import (
-	"Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"bytes"
 	"github.com/pion/opus/pkg/oggreader"
 	"github.com/u2takey/ffmpeg-go"

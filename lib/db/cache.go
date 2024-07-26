@@ -1,7 +1,7 @@
 package db
 
 import (
-	"Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"regexp"
 	"sync"
 	"time"

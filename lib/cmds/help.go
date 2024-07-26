@@ -1,8 +1,8 @@
 package cmds
 
 import (
-	"Kotone-DiVE/lib/config"
-	"Kotone-DiVE/lib/embed"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/embed"
 
 	"github.com/bwmarrin/discordgo"
 	"golang.org/x/text/cases"

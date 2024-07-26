@@ -1,8 +1,8 @@
 package cmds
 
 import (
-	"Kotone-DiVE/lib/config"
-	"Kotone-DiVE/lib/utils"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/utils"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"

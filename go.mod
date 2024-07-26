@@ -1,4 +1,4 @@
-module Kotone-DiVE
+module github.com/tpc3/Kotone-DiVE
 
 go 1.21
 

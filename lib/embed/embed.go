@@ -1,7 +1,7 @@
 package embed
 
 import (
-	"Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"log"
 	"runtime/debug"
 	"time"

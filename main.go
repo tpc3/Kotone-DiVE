@@ -1,10 +1,10 @@
 package main
 
 import (
-	"Kotone-DiVE/lib"
-	"Kotone-DiVE/lib/config"
-	"Kotone-DiVE/lib/db"
-	"Kotone-DiVE/lib/voices"
+	"github.com/tpc3/Kotone-DiVE/lib"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/db"
+	"github.com/tpc3/Kotone-DiVE/lib/voices"
 	"log"
 	"os"
 	"os/signal"
