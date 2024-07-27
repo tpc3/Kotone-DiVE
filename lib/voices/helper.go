@@ -1,10 +1,10 @@
 package voices
 
 import (
+	"errors"
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/utils"
-	"errors"
 	"hash/crc64"
 	"io"
 	"log"

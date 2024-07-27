@@ -1,13 +1,13 @@
 package lib
 
 import (
+	"errors"
 	"github.com/tpc3/Kotone-DiVE/lib/cmds"
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/embed"
 	"github.com/tpc3/Kotone-DiVE/lib/utils"
 	"github.com/tpc3/Kotone-DiVE/lib/voices"
-	"errors"
 	"log"
 	"runtime/debug"
 	"strings"

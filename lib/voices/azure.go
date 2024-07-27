@@ -1,12 +1,12 @@
 package voices
 
 import (
-	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"io"
 	"log"
 	"net/http"

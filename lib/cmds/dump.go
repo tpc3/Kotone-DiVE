@@ -1,10 +1,10 @@
 package cmds
 
 import (
+	"bytes"
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/embed"
-	"bytes"
 	"strings"
 
 	"golang.org/x/text/cases"

@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"encoding/json"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 
 	"go.etcd.io/bbolt"
 )

@@ -1,8 +1,8 @@
 package voices
 
 import (
-	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"errors"
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"io"
 	"log"
 	"net/http"

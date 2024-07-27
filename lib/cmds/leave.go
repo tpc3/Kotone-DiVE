@@ -1,11 +1,11 @@
 package cmds
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/embed"
 	"github.com/tpc3/Kotone-DiVE/lib/utils"
-	"github.com/bwmarrin/discordgo"
 )
 
 const Leave = "leave"
