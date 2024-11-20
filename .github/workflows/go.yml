@@ -2,16 +2,26 @@ name: Go
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [linux-386, linux-amd64, linux-arm, linux-arm64, darwin-amd64, darwin-arm64, windows-386, windows-amd64]
+        arch:
+          [
+            linux-386,
+            linux-amd64,
+            linux-arm,
+            linux-arm64,
+            darwin-amd64,
+            darwin-arm64,
+            windows-386,
+            windows-amd64,
+          ]
         include:
           - arch: linux-386
             goos: linux
@@ -37,26 +47,26 @@ jobs:
           - arch: windows-amd64
             goos: windows
             goarch: amd64
-        
+
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: stable
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
 
-    - name: Build
-      run: mkdir -p bin/${{ matrix.goos }}/${{ matrix.goarch }}
-    - name: Build
-      run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/
-      env:
-        CGO_ENABLED: 0
-        GOARCH: ${{ matrix.goarch }}
-        GOOS: ${{ matrix.goos }}
+      - name: Build
+        run: mkdir -p bin/${{ matrix.goos }}/${{ matrix.goarch }}
+      - name: Build
+        run: go build -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/
+        env:
+          CGO_ENABLED: 0
+          GOARCH: ${{ matrix.goarch }}
+          GOOS: ${{ matrix.goos }}
 
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2.2.4
-      with:
-      # Artifact name
-        path: bin
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/Kotone-DiVE
