@@ -37,6 +37,9 @@ voices:
   coeiroink:
     enabled: false
     api:
+  aivisspeech:
+    enabled: false
+    api:
   aquestalkproxy:
     enabled: false
     api:

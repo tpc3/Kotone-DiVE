@@ -2,15 +2,16 @@ package voices
 
 import (
 	"errors"
-	"github.com/tpc3/Kotone-DiVE/lib/config"
-	"github.com/tpc3/Kotone-DiVE/lib/db"
-	"github.com/tpc3/Kotone-DiVE/lib/utils"
 	"hash/crc64"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/tpc3/Kotone-DiVE/lib/config"
+	"github.com/tpc3/Kotone-DiVE/lib/db"
+	"github.com/tpc3/Kotone-DiVE/lib/utils"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/patrickmn/go-cache"
@@ -63,6 +64,8 @@ func SourceSwitcher(source string) (VoiceSource, error) {
 		voiceSource = Voicevox
 	case Coeiroink.Info.Type:
 		voiceSource = Coeiroink
+	case AivisSpeech.Info.Type:
+		voiceSource = AivisSpeech
 	case AquestalkProxy.Info.Type:
 		voiceSource = AquestalkProxy
 	default:
@@ -102,7 +105,7 @@ func GetVoice(content string, voice *config.Voice) ([]byte, error) {
 		}
 
 		if bin == nil {
-			//Nothing to read
+			// Nothing to read
 			return nil, nil
 		}
 
@@ -139,7 +142,7 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 	}
 
 	if session.VoiceConnections[orgMsg.GuildID] == nil {
-		return Skipped //Skipped due to the disconnection
+		return Skipped // Skipped due to the disconnection
 	}
 
 	frames, err := SplitToFrame(encoded)

@@ -55,6 +55,10 @@ type Config struct {
 			Enabled bool
 			Api     string
 		}
+		AivisSpeech struct {
+			Enabled bool
+			Api     string
+		}
 		AquestalkProxy struct {
 			Enabled bool
 			Api     string
@@ -100,7 +104,7 @@ func init() {
 		log.Fatal("Config parse failed:", err)
 	}
 
-	//verify
+	// verify
 	if CurrentConfig.Debug {
 		log.Print("Debug is enabled")
 	}
@@ -120,7 +124,7 @@ func init() {
 func VerifyGuild(guild *Guild) error {
 	val, exists := Lang[guild.Lang]
 	if !exists {
-		return errors.New("no such language") //Don't use nil val!
+		return errors.New("no such language") // Don't use nil val!
 	}
 	guilderrorstr := val.Error.Guild
 	if len(guild.Prefix) != 1 {
