@@ -18,9 +18,12 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 	} else {
 		state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
 		if err == nil && state != nil {
-			_, err := session.ChannelVoiceJoin(orgMsg.GuildID, state.ChannelID, false, true)
+			voiceConn, err := session.ChannelVoiceJoin(orgMsg.GuildID, state.ChannelID, false, true)
 			if err != nil {
 				session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Failed))
+			}
+			if config.CurrentConfig.Debug {
+				voiceConn.LogLevel = discordgo.LogDebug
 			}
 			db.StateCache[orgMsg.GuildID] = &db.GuildVCState{
 				Lock:                      sync.Mutex{},
