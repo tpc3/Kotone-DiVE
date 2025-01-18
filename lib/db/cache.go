@@ -1,10 +1,11 @@
 package db
 
 import (
-	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"regexp"
 	"sync"
 	"time"
+
+	"github.com/tpc3/Kotone-DiVE/lib/config"
 
 	"github.com/patrickmn/go-cache"
 )
@@ -18,12 +19,10 @@ var (
 )
 
 type GuildVCState struct {
-	Lock                      sync.Mutex
-	Channel                   string
-	Stop                      *chan bool
-	FrameCount                int
-	ReconnectionDetected      bool
-	ManualReconnectionOngoing bool
+	Lock       sync.Mutex
+	Channel    string
+	Stop       *chan bool
+	FrameCount int
 }
 
 func init() {

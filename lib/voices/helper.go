@@ -11,7 +11,6 @@ import (
 
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
-	"github.com/tpc3/Kotone-DiVE/lib/utils"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/patrickmn/go-cache"
@@ -126,22 +125,10 @@ func GetVoice(content string, voice *config.Voice) ([]byte, error) {
 }
 
 func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, encoded []byte) error {
-	if db.StateCache[orgMsg.GuildID].ManualReconnectionOngoing {
-		for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
-			if config.CurrentConfig.Debug {
-				log.Print("Waiting for reconnection...")
-			}
-			time.Sleep(time.Second)
-		}
-	} else if session.VoiceConnections[orgMsg.GuildID] == nil {
-		state, err := session.State.VoiceState(orgMsg.GuildID, session.State.User.ID)
-		if err != nil {
-			return err
-		}
-		utils.VoiceReconnect(session, orgMsg.GuildID, state.ChannelID)
-	}
-
-	if session.VoiceConnections[orgMsg.GuildID] == nil {
+	session.RLock()
+	voiceConnection := session.VoiceConnections[orgMsg.GuildID]
+	session.RUnlock()
+	if voiceConnection == nil {
 		return Skipped // Skipped due to the disconnection
 	}
 
@@ -150,11 +137,11 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 		return err
 	}
 
-	err = session.VoiceConnections[orgMsg.GuildID].Speaking(true)
+	err = voiceConnection.Speaking(true)
 	if err != nil {
 		return err
 	}
-	defer session.VoiceConnections[orgMsg.GuildID].Speaking(false)
+	defer voiceConnection.Speaking(false)
 
 	for i := 0; i < config.CurrentConfig.Discord.Retry; i++ {
 		stop := make(chan bool)
@@ -170,11 +157,13 @@ func ReadVoice(session *discordgo.Session, orgMsg *discordgo.MessageCreate, enco
 					return
 				default:
 					db.StateCache[orgMsg.GuildID].FrameCount++
-					if session.VoiceConnections[orgMsg.GuildID].Ready == false || session.VoiceConnections[orgMsg.GuildID].OpusSend == nil {
+					select {
+					case <-voiceConnection.Dead:
 						result <- VoiceConnClosed
 						return
+					case voiceConnection.OpusSend <- v:
+						// continue
 					}
-					session.VoiceConnections[orgMsg.GuildID].OpusSend <- v
 				}
 			}
 			result <- nil

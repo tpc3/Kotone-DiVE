@@ -1,10 +1,13 @@
 package cmds
 
 import (
+	"context"
+	"sync"
+	"time"
+
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/embed"
-	"sync"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -18,7 +21,9 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 	} else {
 		state, err := session.State.VoiceState(orgMsg.GuildID, orgMsg.Author.ID)
 		if err == nil && state != nil {
-			voiceConn, err := session.ChannelVoiceJoin(orgMsg.GuildID, state.ChannelID, false, true)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			voiceConn, err := session.ChannelVoiceJoin(ctx, orgMsg.GuildID, state.ChannelID, false, true)
 			if err != nil {
 				session.ChannelMessageSendEmbed(orgMsg.ChannelID, embed.NewErrorEmbed(session, orgMsg, guildconf.Lang, config.Lang[guildconf.Lang].Error.Join.Failed))
 			}
@@ -26,10 +31,8 @@ func JoinCmd(session *discordgo.Session, orgMsg *discordgo.MessageCreate, guildc
 				voiceConn.LogLevel = discordgo.LogDebug
 			}
 			db.StateCache[orgMsg.GuildID] = &db.GuildVCState{
-				Lock:                      sync.Mutex{},
-				Channel:                   orgMsg.ChannelID,
-				ReconnectionDetected:      false,
-				ManualReconnectionOngoing: false,
+				Lock:    sync.Mutex{},
+				Channel: orgMsg.ChannelID,
 			}
 			session.MessageReactionAdd(orgMsg.ChannelID, orgMsg.ID, "🖐")
 			return

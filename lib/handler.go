@@ -2,16 +2,17 @@ package lib
 
 import (
 	"errors"
+	"log"
+	"runtime/debug"
+	"strings"
+	"time"
+
 	"github.com/tpc3/Kotone-DiVE/lib/cmds"
 	"github.com/tpc3/Kotone-DiVE/lib/config"
 	"github.com/tpc3/Kotone-DiVE/lib/db"
 	"github.com/tpc3/Kotone-DiVE/lib/embed"
 	"github.com/tpc3/Kotone-DiVE/lib/utils"
 	"github.com/tpc3/Kotone-DiVE/lib/voices"
-	"log"
-	"runtime/debug"
-	"strings"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -210,58 +211,48 @@ func VoiceStateUpdate(session *discordgo.Session, state *discordgo.VoiceStateUpd
 	if !exists {
 		return // Bot isn't connected
 	}
-	if db.StateCache[state.GuildID].ManualReconnectionOngoing {
-		return
-	}
-	_, exists = session.VoiceConnections[state.GuildID]
+	if state.UserID == session.State.User.ID {
+		// self
 
-	guild, err := session.State.Guild(state.GuildID)
-	if err != nil {
-		log.Print("WARN: VoiceStateUpdate failed:", err)
-	}
-
-	myState, _ := session.State.VoiceState(state.GuildID, session.State.User.ID)
-	if myState == nil {
-		if db.StateCache[state.GuildID].ReconnectionDetected {
-			log.Print("WARN: Will ignore this event due to detection")
-			db.StateCache[state.GuildID].ReconnectionDetected = false
+		if state.ChannelID == "" {
+			delete(db.StateCache, state.GuildID)
 			return
 		}
-		if config.CurrentConfig.Debug {
-			log.Print("I'm not exist in voicestates, maybe disconnection?")
-		}
-		delete(db.StateCache, state.GuildID)
-		return
-	}
+	} else {
+		// other
 
-	alone := true
-	for _, userState := range guild.VoiceStates {
-		if config.CurrentConfig.Debug {
-			log.Print(userState)
-		}
-		if userState.UserID != session.State.User.ID {
-			if myState.ChannelID == userState.ChannelID {
-				alone = false
+		myState, _ := session.State.VoiceState(state.GuildID, session.State.User.ID)
+		if myState == nil {
+			if config.CurrentConfig.Debug {
+				log.Print("I'm not exist in voicestates, bug?")
 			}
+			delete(db.StateCache, state.GuildID)
+			return
 		}
-	}
 
-	if alone {
-		err = utils.VoiceDisconnect(session, guild.ID)
+		guild, err := session.State.Guild(state.GuildID)
 		if err != nil {
-			log.Print("WARN: VoiceStateUpdate failed to leave:", err)
+			log.Print("WARN: VoiceStateUpdate failed:", err)
 		}
-		return
-	}
 
-	if state.UserID == session.State.User.ID && state.BeforeUpdate != nil {
-		if state.BeforeUpdate.ChannelID != state.ChannelID && !exists {
-			utils.VoiceReconnect(session, state.GuildID, state.ChannelID)
-		} else if !db.StateCache[state.GuildID].ManualReconnectionOngoing {
-			if state.BeforeUpdate.ChannelID == state.ChannelID && state.Suppress == state.BeforeUpdate.Suppress && state.SelfMute == state.BeforeUpdate.SelfMute && state.SelfDeaf == state.BeforeUpdate.SelfDeaf && state.Mute == state.BeforeUpdate.Mute && state.Deaf == state.BeforeUpdate.Deaf {
-				log.Print("WARN: VoiceStateUpdate detected reconnection.")
-				db.StateCache[state.GuildID].ReconnectionDetected = true
+		alone := true
+		for _, userState := range guild.VoiceStates {
+			if config.CurrentConfig.Debug {
+				log.Print(userState)
 			}
+			if userState.UserID != session.State.User.ID {
+				if myState.ChannelID == userState.ChannelID {
+					alone = false
+				}
+			}
+		}
+
+		if alone {
+			err = utils.VoiceDisconnect(session, guild.ID)
+			if err != nil {
+				log.Print("WARN: VoiceStateUpdate failed to leave:", err)
+			}
+			return
 		}
 	}
 }
